@@ -1,0 +1,8 @@
+{
+  "name": "test-api",
+  "version": "1.0.0",
+  "srcDir": "src",
+  "server": {
+    "port": 8080
+  }
+}
