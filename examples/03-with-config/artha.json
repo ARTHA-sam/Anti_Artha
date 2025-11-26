@@ -1,0 +1,9 @@
+{
+    "port": 8080,
+    "env": "dev",
+    "dependencies": [
+        "lombok",
+        "postgresql",
+        "mysql-connector"
+    ]
+}

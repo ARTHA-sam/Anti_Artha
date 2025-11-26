@@ -14,6 +14,7 @@ import org.reflections.util.ConfigurationBuilder;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 /**
  * ARTHA Runtime - Main server entry point
@@ -23,7 +24,9 @@ public class Runtime {
     public static void main(String[] args) {
         printBanner();
 
+        // Get port from CLI -Dartha.port or default 8080
         int port = Integer.parseInt(System.getProperty("artha.port", "8080"));
+        System.out.println("ℹ️  Using port: " + port + "\n");
 
         Javalin app = Javalin.create(config -> {
             config.showJavalinBanner = false;
@@ -35,14 +38,13 @@ public class Runtime {
             });
         });
 
-        // ✅ FIXED: Proper classpath scanning
+        // Scan for @Step annotations
         System.out.println("🔍 Scanning for routes...\n");
 
         Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
                         .setUrls(ClasspathHelper.forJavaClassPath())
-                        .setScanners(Scanners.TypesAnnotated)
-        );
+                        .setScanners(Scanners.TypesAnnotated));
 
         Set<Class<?>> stepClasses = reflections.getTypesAnnotatedWith(Step.class);
 
@@ -64,6 +66,14 @@ public class Runtime {
 
     private static void registerRoute(Javalin app, Class<?> clazz) {
         try {
+            // Validate handle method exists
+            try {
+                clazz.getMethod("handle", Request.class, Response.class);
+            } catch (NoSuchMethodException e) {
+                System.out.println("  ⚠️  Missing handle() in " + clazz.getSimpleName() + " — skipping");
+                return;
+            }
+
             Step step = clazz.getAnnotation(Step.class);
             String path = step.path();
             String method = step.method().toUpperCase();
@@ -82,6 +92,9 @@ public class Runtime {
                     break;
                 case "DELETE":
                     app.delete(path, ctx -> handleRequest(ctx, clazz));
+                    break;
+                case "PATCH":
+                    app.patch(path, ctx -> handleRequest(ctx, clazz));
                     break;
             }
         } catch (Exception e) {
@@ -109,10 +122,13 @@ public class Runtime {
                 }
             }
         } catch (Exception e) {
-            ctx.status(500).json(Map.of(
-                    "error", "Internal server error",
-                    "message", e.getMessage()
-            ));
+            // Use HashMap instead of Map.of to allow null values
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
+            errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
+
+            ctx.status(500).json(errorResponse);
             e.printStackTrace();
         }
     }

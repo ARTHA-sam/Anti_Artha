@@ -14,7 +14,7 @@ program
 program
     .command('dev')
     .description('Start development server with hot reload')
-    .option('-p, --port <port>', 'Port to run on', '8080')
+    .option('-p, --port <port>', 'Port to run on (overrides artha.json)')
     .action((options) => {
         require('../src/commands/dev')(options);
     });
@@ -32,6 +32,14 @@ program
     .description('Build production JAR')
     .action(() => {
         require('../src/commands/build')();
+    });
+
+program
+    .command('add <package>')
+    .description('Add a dependency to your project')
+    .option('-v, --version <version>', 'Specify version')
+    .action((packageName, options) => {
+        require('../src/commands/add')(packageName, options.version);
     });
 
 // Show help if no command

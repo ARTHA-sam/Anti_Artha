@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "srcDir": "src",
   "server": {
-    "port": 8080
+    "port": 8932
+  },
+  "dependencies": {
+    "lombok": "1.18.30",
+    "jackson": "2.16.1"
   }
 }
