@@ -64,6 +64,15 @@ class DependencyManager {
         const jarName = `${artifactId}-${version}.jar`;
         const jarPath = path.join(this.libDir, jarName);
 
+        // Check for existing versions and remove them if they differ
+        const existingFiles = await fs.readdir(this.libDir).catch(() => []);
+        for (const file of existingFiles) {
+            if (file.startsWith(`${artifactId}-`) && file.endsWith('.jar') && file !== jarName) {
+                console.log(chalk.yellow(`  Removing old version: ${file}`));
+                await fs.remove(path.join(this.libDir, file));
+            }
+        }
+
         if (await fs.pathExists(jarPath)) return jarPath;
 
         const response = await axios({

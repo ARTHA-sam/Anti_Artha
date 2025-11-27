@@ -1,0 +1,11 @@
+{
+  "name": "sam",
+  "version": "1.0.0",
+  "srcDir": "src",
+  "server": {
+    "port": 2020
+  },
+  "dependencies": {
+    "lombok": "1.18.34"
+  }
+}

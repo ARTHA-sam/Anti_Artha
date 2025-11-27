@@ -30,6 +30,8 @@ public class Runtime {
 
         Javalin app = Javalin.create(config -> {
             config.showJavalinBanner = false;
+            // Configure Jackson as the default JSON mapper
+            config.jsonMapper(new io.javalin.json.JavalinJackson());
 
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
@@ -46,16 +48,25 @@ public class Runtime {
                         .setUrls(ClasspathHelper.forJavaClassPath())
                         .setScanners(Scanners.TypesAnnotated));
 
+        // Scan for @Step annotations (Classes)
         Set<Class<?>> stepClasses = reflections.getTypesAnnotatedWith(Step.class);
 
-        if (stepClasses.isEmpty()) {
+        // Scan for @Step annotations (Methods)
+        Set<Method> stepMethods = reflections.getMethodsAnnotatedWith(Step.class);
+
+        if (stepClasses.isEmpty() && stepMethods.isEmpty()) {
             System.out.println("⚠️  No @Step annotations found!");
-            System.out.println("   Make sure your classes use @Step annotation\n");
+            System.out.println("   Make sure your classes or methods use @Step annotation\n");
         }
 
-        // Register routes
+        // Register Class-based routes (Legacy)
         for (Class<?> clazz : stepClasses) {
-            registerRoute(app, clazz);
+            registerClassRoute(app, clazz);
+        }
+
+        // Register Method-based routes (New)
+        for (Method method : stepMethods) {
+            registerMethodRoute(app, method);
         }
 
         app.start(port);
@@ -64,13 +75,19 @@ public class Runtime {
         System.out.println("Press Ctrl+C to stop\n");
     }
 
-    private static void registerRoute(Javalin app, Class<?> clazz) {
+    private static void registerClassRoute(Javalin app, Class<?> clazz) {
         try {
-            // Validate handle method exists
-            try {
-                clazz.getMethod("handle", Request.class, Response.class);
-            } catch (NoSuchMethodException e) {
-                System.out.println("  ⚠️  Missing handle() in " + clazz.getSimpleName() + " — skipping");
+            Method handleMethod = findHandlerMethod(clazz);
+
+            if (handleMethod == null) {
+                // If the class has method-level annotations, we shouldn't warn about missing
+                // handle()
+                for (Method m : clazz.getMethods()) {
+                    if (m.isAnnotationPresent(Step.class))
+                        return;
+                }
+                System.out.println("  ⚠️  No handler method found in " + clazz.getSimpleName()
+                        + " (expected 'handle' or a single method)");
                 return;
             }
 
@@ -78,59 +95,129 @@ public class Runtime {
             String path = step.path();
             String method = step.method().toUpperCase();
 
-            System.out.println("  " + method + "  " + path + " → " + clazz.getSimpleName());
+            System.out.println(
+                    "  " + method + "  " + path + " → " + clazz.getSimpleName() + "." + handleMethod.getName() + "()");
 
-            switch (method) {
-                case "GET":
-                    app.get(path, ctx -> handleRequest(ctx, clazz));
-                    break;
-                case "POST":
-                    app.post(path, ctx -> handleRequest(ctx, clazz));
-                    break;
-                case "PUT":
-                    app.put(path, ctx -> handleRequest(ctx, clazz));
-                    break;
-                case "DELETE":
-                    app.delete(path, ctx -> handleRequest(ctx, clazz));
-                    break;
-                case "PATCH":
-                    app.patch(path, ctx -> handleRequest(ctx, clazz));
-                    break;
-            }
+            registerHandler(app, method, path, ctx -> handleRequest(ctx, clazz, handleMethod));
         } catch (Exception e) {
             System.err.println("❌ Failed to register " + clazz.getName());
             e.printStackTrace();
         }
     }
 
-    private static void handleRequest(io.javalin.http.Context ctx, Class<?> clazz) {
+    private static Method findHandlerMethod(Class<?> clazz) {
+        // 1. Try standard "handle" method
+        for (Method m : clazz.getDeclaredMethods()) {
+            if (m.getName().equals("handle"))
+                return m;
+        }
+
+        // 2. If only one method is defined, assume it's the handler
+        // Filter out synthetic methods (like lambda bodies)
+        java.util.List<Method> userMethods = new java.util.ArrayList<>();
+        for (Method m : clazz.getDeclaredMethods()) {
+            if (!m.isSynthetic())
+                userMethods.add(m);
+        }
+
+        if (userMethods.size() == 1) {
+            return userMethods.get(0);
+        }
+
+        return null;
+    }
+
+    private static void registerMethodRoute(Javalin app, Method method) {
         try {
-            Object instance = clazz.getDeclaredConstructor().newInstance();
-            Method handleMethod = clazz.getMethod("handle", Request.class, Response.class);
+            Step step = method.getAnnotation(Step.class);
+            String path = step.path();
+            String httpMethod = step.method().toUpperCase();
+            Class<?> clazz = method.getDeclaringClass();
 
-            Request req = new RequestImpl(ctx);
-            Response res = new ResponseImpl(ctx);
+            System.out.println(
+                    "  " + httpMethod + "  " + path + " → " + clazz.getSimpleName() + "." + method.getName() + "()");
 
-            Object result = handleMethod.invoke(instance, req, res);
-
-            // Auto-serialize if not already handled
-            if (result != null) {
-                if (result instanceof String) {
-                    ctx.result((String) result);
-                } else {
-                    ctx.json(result);
-                }
-            }
+            registerHandler(app, httpMethod, path, ctx -> handleRequest(ctx, clazz, method));
         } catch (Exception e) {
-            // Use HashMap instead of Map.of to allow null values
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", true);
-            errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
-            errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
-
-            ctx.status(500).json(errorResponse);
+            System.err.println("❌ Failed to register " + method.getName());
             e.printStackTrace();
         }
+    }
+
+    private static void registerHandler(Javalin app, String method, String path, io.javalin.http.Handler handler) {
+        switch (method) {
+            case "GET":
+                app.get(path, handler);
+                break;
+            case "POST":
+                app.post(path, handler);
+                break;
+            case "PUT":
+                app.put(path, handler);
+                break;
+            case "DELETE":
+                app.delete(path, handler);
+                break;
+            case "PATCH":
+                app.patch(path, handler);
+                break;
+        }
+    }
+
+    private static void handleRequest(io.javalin.http.Context ctx, Class<?> clazz, Method method) {
+        try {
+            // TODO: Dependency Injection support
+            java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true); // Allow package-private classes
+            Object instance = constructor.newInstance();
+            invokeAndRespond(ctx, instance, method);
+        } catch (Exception e) {
+            handleError(ctx, e);
+        }
+    }
+
+    private static void invokeAndRespond(io.javalin.http.Context ctx, Object instance, Method method) throws Exception {
+        Request req = new RequestImpl(ctx);
+        Response res = new ResponseImpl(ctx);
+
+        // Smart Parameter Injection
+        java.lang.reflect.Parameter[] params = method.getParameters();
+        Object[] args = new Object[params.length];
+
+        for (int i = 0; i < params.length; i++) {
+            Class<?> type = params[i].getType();
+            if (type == Request.class) {
+                args[i] = req;
+            } else if (type == Response.class) {
+                args[i] = res;
+            } else {
+                // TODO: Future - Inject body, query params, etc. based on type/name
+                args[i] = null;
+            }
+        }
+
+        method.setAccessible(true); // Allow calling package-private methods
+        Object result = method.invoke(instance, args);
+
+        // Auto-serialize if not already handled
+        if (result != null) {
+            if (result instanceof String) {
+                ctx.result((String) result);
+            } else {
+                ctx.json(result);
+            }
+        }
+    }
+
+    private static void handleError(io.javalin.http.Context ctx, Exception e) {
+        // Use HashMap instead of Map.of to allow null values
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", true);
+        errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
+        errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
+
+        ctx.status(500).json(errorResponse);
+        e.printStackTrace();
     }
 
     private static void printBanner() {

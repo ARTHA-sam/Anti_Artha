@@ -43,12 +43,17 @@ public class RequestImpl implements Request {
     }
 
     @Override
+    public String param(String key) {
+        return path(key);
+    }
+
+    @Override
     public <T> T body(Class<T> clazz) {
         try {
             String b = ctx.body();
             if (b == null || b.trim().isEmpty())
                 throw new RuntimeException("Empty body or wrong Content-Type?");
-            return ctx.bodyAsClass(clazz);  // Javalin auto-parses JSON!
+            return ctx.bodyAsClass(clazz); // Javalin auto-parses JSON!
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse JSON body to " + clazz.getSimpleName() + ": " +
                     e.getMessage() + "\n" +

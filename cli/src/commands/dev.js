@@ -131,7 +131,7 @@ function compile(javaFiles, runtimeJar, dependencyJars = []) {
         const filesArg = javaFiles.join(' ');
         const allJars = [runtimeJar, ...dependencyJars];
         const classpath = allJars.join(isWindows ? ';' : ':');
-        const command = `javac -cp "${classpath}" -d build ${filesArg}`;
+        const command = `javac -cp "${classpath}" -processorpath "${classpath}" -d build ${filesArg}`;
         const javac = spawn(command, { shell: true, stdio: ['pipe', 'pipe', 'pipe'] });
         let stderr = '';
         javac.stderr.on('data', (d) => { stderr += d.toString(); });

@@ -23,7 +23,7 @@ public class DependencyLoader {
 
     static {
         // Dependency name -> groupId:artifactId:version
-        DEPENDENCY_MAP.put("lombok", "org.projectlombok:lombok:1.18.32");
+        DEPENDENCY_MAP.put("lombok", "org.projectlombok:lombok:1.18.42");
         DEPENDENCY_MAP.put("postgresql", "org.postgresql:postgresql:42.7.3");
         DEPENDENCY_MAP.put("mysql-connector", "com.mysql:mysql-connector-j:8.3.0");
         DEPENDENCY_MAP.put("gson", "com.google.code.gson:gson:2.10.1");

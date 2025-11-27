@@ -1,0 +1,11 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "srcDir": "src",
+  "server": {
+    "port": 3000
+  },
+  "dependencies": {
+    "jackson": "2.16.1"
+  }
+}

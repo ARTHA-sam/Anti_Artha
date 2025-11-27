@@ -30,6 +30,12 @@ async function newCommand(projectName, options) {
             srcDir: "src",
             server: {
                 port: 8080
+            },
+            dependencies: {
+                "lombok": "1.18.34",
+                "jackson": "2.16.1",
+                "jackson-core": "2.16.1",
+                "jackson-annotations": "2.16.1"
             }
         };
         await fs.writeJson(
