@@ -131,8 +131,36 @@ function compile(javaFiles, runtimeJar, dependencyJars = []) {
         const filesArg = javaFiles.join(' ');
         const allJars = [runtimeJar, ...dependencyJars];
         const classpath = allJars.join(isWindows ? ';' : ':');
-        const command = `javac -cp "${classpath}" -processorpath "${classpath}" -d build ${filesArg}`;
-        const javac = spawn(command, { shell: true, stdio: ['pipe', 'pipe', 'pipe'] });
+
+        // EXPANDED JVM FLAGS: Necessary for Lombok compatibility with JDK 21+
+        const jvmFlags = [
+            '--add-opens=java.base/java.lang=ALL-UNNAMED',
+            '--add-opens=java.base/java.util=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED',
+            '--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
+        ];
+
+        const javacArgs = [
+            ...jvmFlags.map(f => '-J' + f),
+            '-cp', classpath,
+            '-processorpath', classpath,
+            '-d', 'build',
+            ...javaFiles
+        ];
+
+        // Debug: Print args to verify
+        console.log('DEBUG: javac args count:', javacArgs.length);
+
+        const javac = spawn('javac', javacArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
         let stderr = '';
         javac.stderr.on('data', (d) => { stderr += d.toString(); });
         javac.on('close', (code) => {
@@ -149,6 +177,9 @@ function startServer(runtimeJar, port, dependencyJars = []) {
 
     javaProcess = spawn('java', [
         `-Dartha.port=${port}`,
+        // Add some opens for runtime reflection (optional but often needed)
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
         '-cp',
         classpath,
         'dev.artha.core.Runtime'

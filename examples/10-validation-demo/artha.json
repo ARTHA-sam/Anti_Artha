@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "srcDir": "src",
     "server": {
-        "port": 8082
+        "port": 8083
     },
     "dependencies": {
         "jackson": "2.16.1",

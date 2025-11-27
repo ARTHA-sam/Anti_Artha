@@ -12,6 +12,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -34,22 +35,32 @@ public class Runtime {
 
     private static final Validator validator;
 
-    static {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
-    }
-
-    // Internal exception class for validation errors
-    // Added this because it was used in the code but not defined or imported
-    public static class ValidationException extends RuntimeException {
+    // Internal exception to handle validation failures during request processing
+    private static class RequestValidationException extends RuntimeException {
         private final Set<ConstraintViolation<Object>> violations;
 
-        public ValidationException(Set<ConstraintViolation<Object>> violations) {
+        RequestValidationException(Set<ConstraintViolation<Object>> violations) {
             this.violations = violations;
         }
 
         public Set<ConstraintViolation<Object>> getViolations() {
             return violations;
+        }
+    }
+
+    static {
+        // FIX: HV000183 - Use ParameterMessageInterpolator to avoid needing Jakarta EL
+        // dependencies
+        try {
+            ValidatorFactory factory = Validation.byDefaultProvider()
+                    .configure()
+                    .messageInterpolator(new ParameterMessageInterpolator())
+                    .buildValidatorFactory();
+            validator = factory.getValidator();
+        } catch (Exception e) {
+            System.err.println("⚠️  CRITICAL: Failed to initialize Validator. Server may not start correctly.");
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -212,7 +223,7 @@ public class Runtime {
 
     private static void handleRequest(io.javalin.http.Context ctx, Class<?> clazz, Method method) {
         try {
-            // TODO: Dependency Injection support
+            // Simple instantiation (could be upgraded to DI later)
             java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor();
             constructor.setAccessible(true); // Allow package-private classes
             Object instance = constructor.newInstance();
@@ -247,7 +258,6 @@ public class Runtime {
                 }
             } else {
                 // Advanced Injection: Parse POJO from request body
-                // This enables: public User create(@Body User user) {...}
                 try {
                     String body = ctx.body();
                     if (body != null && !body.trim().isEmpty()) {
@@ -255,21 +265,20 @@ public class Runtime {
                         ObjectMapper mapper = new ObjectMapper();
                         Object pojo = mapper.readValue(body, type);
 
-                        // Validate if @Valid annotation is present
+                        // Validate if @Valid annotation is present on the method parameter
                         if (param.isAnnotationPresent(Valid.class)) {
-                            // We cast to Object to satisfy the validator generic type check
                             @SuppressWarnings("unchecked")
                             Set<ConstraintViolation<Object>> violations = validator.validate(pojo);
                             if (!violations.isEmpty()) {
-                                throw new ValidationException(violations);
+                                throw new RequestValidationException(violations);
                             }
                         }
                         args[i] = pojo;
                     } else {
                         args[i] = null;
                     }
-                } catch (ValidationException e) {
-                    throw e; // Re-throw validation exceptions
+                } catch (RequestValidationException e) {
+                    throw e; // Re-throw validation exceptions to be caught by handleError
                 } catch (Exception e) {
                     // If parsing fails, throw a 400 Bad Request
                     throw new IllegalArgumentException("Invalid request body: " + e.getMessage());
@@ -294,26 +303,15 @@ public class Runtime {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", true);
 
-        // Handle validation errors specially
-        // InvocationTargetException usually wraps the actual exception in getCause()
+        // Unwrap InvocationTargetException to get the real cause
         Throwable cause = e.getCause();
 
-        if (cause instanceof ValidationException) {
-            ValidationException ve = (ValidationException) cause;
-            errorResponse.put("message", "Validation failed");
+        // Check for our custom validation exception
+        if (cause instanceof RequestValidationException || e instanceof RequestValidationException) {
+            RequestValidationException ve = (e instanceof RequestValidationException)
+                    ? (RequestValidationException) e
+                    : (RequestValidationException) cause;
 
-            List<Map<String, String>> violations = new ArrayList<>();
-            for (ConstraintViolation<?> violation : ve.getViolations()) {
-                Map<String, String> violationMap = new HashMap<>();
-                violationMap.put("field", violation.getPropertyPath().toString());
-                violationMap.put("message", violation.getMessage());
-                violations.add(violationMap);
-            }
-            errorResponse.put("violations", violations);
-
-            ctx.status(400).json(errorResponse);
-        } else if (e instanceof ValidationException) {
-            ValidationException ve = (ValidationException) e;
             errorResponse.put("message", "Validation failed");
 
             List<Map<String, String>> violations = new ArrayList<>();
@@ -361,7 +359,7 @@ public class Runtime {
         System.out.println("  ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝");
         System.out.println();
         System.out.println("  Simple Java Backend Framework for Students");
-        System.out.println("  Version 0.1.2 (Validation Support)");
+        System.out.println("  Version 0.1.2 (Validation Support - No EL)");
         System.out.println();
     }
 }

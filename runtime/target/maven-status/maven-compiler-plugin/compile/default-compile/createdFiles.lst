@@ -1,9 +1,9 @@
 dev\artha\core\Runtime.class
 dev\artha\annotations\Body.class
 dev\artha\http\RequestImpl.class
+dev\artha\core\Runtime$RequestValidationException.class
 dev\artha\http\Response.class
 dev\artha\http\ResponseImpl.class
-dev\artha\core\Runtime$ValidationException.class
 dev\artha\annotations\Valid.class
 dev\artha\annotations\Step.class
 dev\artha\core\ValidationException.class
