@@ -106,6 +106,7 @@ The annotations will be recognized! ✅
         // Create IntelliJ configuration (if runtime found)
         if (runtimeJar) {
             await createIntelliJConfig(projectPath, projectName, runtimeJar);
+            await createVSCodeConfig(projectPath, runtimeJar);
         }
 
         // Success!
@@ -115,7 +116,7 @@ The annotations will be recognized! ✅
         console.log(chalk.white('  artha dev\n'));
 
         if (runtimeJar) {
-            console.log(chalk.green('✅ IntelliJ support configured automatically!\n'));
+            console.log(chalk.green('✅ IDE support configured (IntelliJ + VS Code)!\n'));
         } else {
             console.log(chalk.yellow('⚠️  IDE support: Manually add runtime JAR (see README.md)\n'));
         }
@@ -194,6 +195,41 @@ async function createIntelliJConfig(projectPath, projectName, runtimeJar) {
     await fs.writeFile(
         path.join(ideaPath, 'misc.xml'),
         miscXml
+    );
+}
+
+async function createVSCodeConfig(projectPath, runtimeJar) {
+    // Create .vscode directory
+    const vscodePath = path.join(projectPath, '.vscode');
+    await fs.ensureDir(vscodePath);
+
+    // Create settings.json
+    const settings = {
+        "java.project.sourcePaths": ["src"],
+        "java.project.outputPath": "build",
+        "java.project.referencedLibraries": [
+            ".artha/lib/**/*.jar",
+            runtimeJar.replace(/\\/g, '/')
+        ]
+    };
+
+    await fs.writeJson(
+        path.join(vscodePath, 'settings.json'),
+        settings,
+        { spaces: 4 }
+    );
+
+    // Create extensions.json
+    const extensions = {
+        "recommendations": [
+            "vscjava.vscode-java-pack"
+        ]
+    };
+
+    await fs.writeJson(
+        path.join(vscodePath, 'extensions.json'),
+        extensions,
+        { spaces: 4 }
     );
 }
 

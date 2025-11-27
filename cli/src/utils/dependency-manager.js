@@ -15,7 +15,12 @@ const DEPENDENCY_MAP = {
     'sqlite': 'org.xerial:sqlite-jdbc',
     'jackson': 'com.fasterxml.jackson.core:jackson-databind',
     'jackson-core': 'com.fasterxml.jackson.core:jackson-core',
-    'jackson-annotations': 'com.fasterxml.jackson.core:jackson-annotations'
+    'jackson-annotations': 'com.fasterxml.jackson.core:jackson-annotations',
+    'hikari': 'com.zaxxer:HikariCP',
+    'slf4j-api': 'org.slf4j:slf4j-api',
+    'slf4j-simple': 'org.slf4j:slf4j-simple',
+    'validation-api': 'jakarta.validation:jakarta.validation-api',
+    'hibernate-validator': 'org.hibernate.validator:hibernate-validator'
 };
 
 class DependencyManager {

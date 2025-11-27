@@ -1,10 +1,12 @@
 package dev.artha.core;
 
 import dev.artha.annotations.Step;
+import dev.artha.annotations.Valid;
 import dev.artha.http.Request;
 import dev.artha.http.RequestImpl;
 import dev.artha.http.Response;
 import dev.artha.http.ResponseImpl;
+import dev.artha.db.Database;
 import io.javalin.Javalin;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
@@ -15,14 +17,58 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.sql.Connection;
+import java.io.File;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.ConstraintViolation;
 
 /**
  * ARTHA Runtime - Main server entry point
  */
 public class Runtime {
 
+    private static final Validator validator;
+
+    static {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    // Internal exception class for validation errors
+    // Added this because it was used in the code but not defined or imported
+    public static class ValidationException extends RuntimeException {
+        private final Set<ConstraintViolation<Object>> violations;
+
+        public ValidationException(Set<ConstraintViolation<Object>> violations) {
+            this.violations = violations;
+        }
+
+        public Set<ConstraintViolation<Object>> getViolations() {
+            return violations;
+        }
+    }
+
     public static void main(String[] args) {
         printBanner();
+
+        // Load artha.json configuration
+        Map<String, Object> arthaConfig = loadConfig();
+
+        // Initialize database if configured
+        if (arthaConfig.containsKey("database")) {
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> dbConfig = (Map<String, Object>) arthaConfig.get("database");
+                Database.getInstance().initialize(dbConfig);
+            } catch (Exception e) {
+                System.err.println("⚠️  Database initialization failed: " + e.getMessage());
+            }
+        }
 
         // Get port from CLI -Dartha.port or default 8080
         int port = Integer.parseInt(System.getProperty("artha.port", "8080"));
@@ -46,7 +92,7 @@ public class Runtime {
         Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
                         .setUrls(ClasspathHelper.forJavaClassPath())
-                        .setScanners(Scanners.TypesAnnotated));
+                        .setScanners(Scanners.TypesAnnotated, Scanners.MethodsAnnotated));
 
         // Scan for @Step annotations (Classes)
         Set<Class<?>> stepClasses = reflections.getTypesAnnotatedWith(Step.class);
@@ -185,14 +231,49 @@ public class Runtime {
         Object[] args = new Object[params.length];
 
         for (int i = 0; i < params.length; i++) {
-            Class<?> type = params[i].getType();
+            java.lang.reflect.Parameter param = params[i];
+            Class<?> type = param.getType();
+
             if (type == Request.class) {
                 args[i] = req;
             } else if (type == Response.class) {
                 args[i] = res;
+            } else if (type == Connection.class) {
+                // Inject database connection
+                if (Database.getInstance().isInitialized()) {
+                    args[i] = Database.getInstance().getConnection();
+                } else {
+                    throw new IllegalStateException("Database not configured! Add database section to artha.json");
+                }
             } else {
-                // TODO: Future - Inject body, query params, etc. based on type/name
-                args[i] = null;
+                // Advanced Injection: Parse POJO from request body
+                // This enables: public User create(@Body User user) {...}
+                try {
+                    String body = ctx.body();
+                    if (body != null && !body.trim().isEmpty()) {
+                        // Use Jackson to deserialize JSON to POJO
+                        ObjectMapper mapper = new ObjectMapper();
+                        Object pojo = mapper.readValue(body, type);
+
+                        // Validate if @Valid annotation is present
+                        if (param.isAnnotationPresent(Valid.class)) {
+                            // We cast to Object to satisfy the validator generic type check
+                            @SuppressWarnings("unchecked")
+                            Set<ConstraintViolation<Object>> violations = validator.validate(pojo);
+                            if (!violations.isEmpty()) {
+                                throw new ValidationException(violations);
+                            }
+                        }
+                        args[i] = pojo;
+                    } else {
+                        args[i] = null;
+                    }
+                } catch (ValidationException e) {
+                    throw e; // Re-throw validation exceptions
+                } catch (Exception e) {
+                    // If parsing fails, throw a 400 Bad Request
+                    throw new IllegalArgumentException("Invalid request body: " + e.getMessage());
+                }
             }
         }
 
@@ -210,14 +291,64 @@ public class Runtime {
     }
 
     private static void handleError(io.javalin.http.Context ctx, Exception e) {
-        // Use HashMap instead of Map.of to allow null values
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", true);
-        errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
-        errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
 
-        ctx.status(500).json(errorResponse);
-        e.printStackTrace();
+        // Handle validation errors specially
+        // InvocationTargetException usually wraps the actual exception in getCause()
+        Throwable cause = e.getCause();
+
+        if (cause instanceof ValidationException) {
+            ValidationException ve = (ValidationException) cause;
+            errorResponse.put("message", "Validation failed");
+
+            List<Map<String, String>> violations = new ArrayList<>();
+            for (ConstraintViolation<?> violation : ve.getViolations()) {
+                Map<String, String> violationMap = new HashMap<>();
+                violationMap.put("field", violation.getPropertyPath().toString());
+                violationMap.put("message", violation.getMessage());
+                violations.add(violationMap);
+            }
+            errorResponse.put("violations", violations);
+
+            ctx.status(400).json(errorResponse);
+        } else if (e instanceof ValidationException) {
+            ValidationException ve = (ValidationException) e;
+            errorResponse.put("message", "Validation failed");
+
+            List<Map<String, String>> violations = new ArrayList<>();
+            for (ConstraintViolation<?> violation : ve.getViolations()) {
+                Map<String, String> violationMap = new HashMap<>();
+                violationMap.put("field", violation.getPropertyPath().toString());
+                violationMap.put("message", violation.getMessage());
+                violations.add(violationMap);
+            }
+            errorResponse.put("violations", violations);
+
+            ctx.status(400).json(errorResponse);
+        } else {
+            // Handle other errors
+            errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
+            errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
+            ctx.status(500).json(errorResponse);
+            e.printStackTrace();
+        }
+    }
+
+    private static Map<String, Object> loadConfig() {
+        try {
+            File configFile = new File("artha.json");
+            if (!configFile.exists()) {
+                return new HashMap<>(); // Return empty if no config
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> config = mapper.readValue(configFile, Map.class);
+            return config;
+        } catch (Exception e) {
+            System.err.println("⚠️  Failed to load artha.json: " + e.getMessage());
+            return new HashMap<>();
+        }
     }
 
     private static void printBanner() {
@@ -230,7 +361,7 @@ public class Runtime {
         System.out.println("  ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝");
         System.out.println();
         System.out.println("  Simple Java Backend Framework for Students");
-        System.out.println("  Version 0.1.0");
+        System.out.println("  Version 0.1.2 (Validation Support)");
         System.out.println();
     }
 }

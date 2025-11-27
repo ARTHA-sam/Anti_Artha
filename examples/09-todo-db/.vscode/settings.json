@@ -1,0 +1,10 @@
+{
+    "java.project.sourcePaths": [
+        "src"
+    ],
+    "java.project.outputPath": "build",
+    "java.project.referencedLibraries": [
+        ".artha/lib/**/*.jar",
+        "C:/Users/samar/Downloads/artha/runtime/target/artha-runtime-0.1.0-shaded.jar"
+    ]
+}

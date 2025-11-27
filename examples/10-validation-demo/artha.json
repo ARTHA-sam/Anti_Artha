@@ -1,0 +1,13 @@
+{
+    "name": "validation-demo",
+    "version": "1.0.0",
+    "srcDir": "src",
+    "server": {
+        "port": 8082
+    },
+    "dependencies": {
+        "jackson": "2.16.1",
+        "validation-api": "3.0.2",
+        "hibernate-validator": "8.0.1.Final"
+    }
+}
