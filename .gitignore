@@ -1,0 +1,18 @@
+# Build artifacts
+build/
+target/
+.gradle/
+.idea/
+.vscode/
+*.class
+*.log
+
+# Node
+node_modules/
+npm-debug.log
+
+# ARTHA
+.artha/
+
+# Allow bundled runtime JAR
+!cli/lib/artha-runtime.jar
