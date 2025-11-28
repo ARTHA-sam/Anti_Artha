@@ -95,6 +95,33 @@ public class Runtime {
                     it.anyHost();
                 });
             });
+
+            // OpenAPI / Swagger Configuration
+            try {
+                // Register OpenAPI Plugin
+                config.registerPlugin(new io.javalin.openapi.plugin.OpenApiPlugin(pluginConfig -> {
+                    pluginConfig.withDefinitionConfiguration((version, definition) -> {
+                        definition.withInfo(info -> {
+                            info.setTitle("ARTHA API");
+                            info.setVersion("1.0.0");
+                            info.setDescription("API built with ARTHA Framework");
+                        });
+                    });
+                }));
+
+                // Register Swagger UI Plugin
+                config.registerPlugin(new io.javalin.openapi.plugin.swagger.SwaggerPlugin(pluginConfig -> {
+                    pluginConfig.setUiPath("/swagger");
+                }));
+
+                // Register ReDoc Plugin
+                config.registerPlugin(new io.javalin.openapi.plugin.redoc.ReDocPlugin(pluginConfig -> {
+                    pluginConfig.setUiPath("/redoc");
+                }));
+            } catch (NoClassDefFoundError e) {
+                // Graceful fallback if dependencies are missing at runtime
+                System.out.println("⚠️  Swagger UI dependencies not found. Skipping docs generation.");
+            }
         });
 
         // Scan for @Step annotations

@@ -33,6 +33,14 @@ public class DependencyLoader {
         DEPENDENCY_MAP.put("sqlite", "org.xerial:sqlite-jdbc:3.45.1.0");
         DEPENDENCY_MAP.put("h2", "com.h2database:h2:2.2.224");
         DEPENDENCY_MAP.put("logback", "ch.qos.logback:logback-classic:1.4.14");
+
+        // OpenAPI / Swagger
+        DEPENDENCY_MAP.put("javalin-openapi", "io.javalin.community.openapi:javalin-openapi-plugin:6.1.0");
+        DEPENDENCY_MAP.put("javalin-swagger", "io.javalin.community.openapi:javalin-swagger-plugin:6.1.0");
+        DEPENDENCY_MAP.put("javalin-redoc", "io.javalin.community.openapi:javalin-redoc-plugin:6.1.0");
+        DEPENDENCY_MAP.put("swagger-core", "io.swagger.core.v3:swagger-core-jakarta:2.2.20");
+        DEPENDENCY_MAP.put("swagger-models", "io.swagger.core.v3:swagger-models-jakarta:2.2.20");
+        DEPENDENCY_MAP.put("swagger-annotations", "io.swagger.core.v3:swagger-annotations-jakarta:2.2.20");
     }
 
     public static void loadDependencies(List<String> dependencies) {
