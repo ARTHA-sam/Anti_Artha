@@ -2,252 +2,184 @@
 
 > A zero-boilerplate, ultra-lightweight Java backend framework that brings Flask-like simplicity to the Java ecosystem.
 
-**Status**: ✨ Early Stage | **Contributors**: 2 | **License**: MIT
+**Status**: ✨ Early Stage | **License**: MIT
 
 ---
 
 ## 📖 What is ARTHA?
 
-ARTHA is a **beginner-friendly, lightweight Java backend framework** designed to remove the complexity that makes Java overwhelming for newcomers.
+ARTHA is designed to remove the complexity that makes Java overwhelming for newcomers. It abstracts away build tools, dependency injection, and server configuration, letting you focus purely on logic.
 
-While Python developers enjoy Flask and FastAPI's "just write code" philosophy, Java developers face:
-- Maven/Gradle configuration nightmares
-- Heavy frameworks like Spring Boot (5+ minute startup times)
-- Complex dependency injection setups  
-- Boilerplate everywhere
-
-**ARTHA changes this paradigm.**
-
----
-
-## 🤯 Why ARTHA is "Mad" (Insanely Cool)
-
-### 1. **Zero-Boilerplate Code with @Step Annotation**
-Write complete API endpoints with just the `@Step` annotation:
-
-```java
-@Step(path = "/namaste", method = "GET")
-public class Hello {
-    public String handle(Request req, Response res) {
-        return "Namaste, World!";
-    }
-}
-```
-
-**No imports needed. No main() method. No class wrappers. It just works.**
-
-### 2. **Blazingly Fast Setup**
-- ⚡ **< 3 seconds startup** (vs. Spring Boot's 30+ seconds)
-- 📦 **One command**: `artha new myapp`
-- 🎯 **Instant hot-reload**: Changes apply immediately
-
-### 3. **No Build Tool Exposure**
-- No `pom.xml` or `build.gradle` cluttering your workspace
-- No Maven/Gradle learning curve for beginners
-- Build system completely abstracted away by the CLI
-
-### 4. **Intelligent Annotation Scanning**
-The framework automatically:
-- Detects your Java files
-- Compiles code in the background
-- Scans for @Step annotations
-- Starts your server at http://localhost:8080
-
-### 5. **Flexible Architecture**
-Scale from minimalist to enterprise
-
-### 6. **Hybrid Language Stack**
-- **CLI**: Node.js/JavaScript (universal, fast)
-- **Runtime**: Java (robust, performant)  
-- **Best of both**: Easy installation + powerful execution
-
----
-
-## ✨ Key Features
-
-- **Single-File Backend** - Start with just one `.java` file
-- **No main() Required** - ARTHA handles the entry point
-- **Hot Reload** - Dev server reloads on file changes
-- **Zero Configuration** - No XML, no complex setup
-- **IDE Friendly** - Works in VS Code & IntelliJ IDEA
-- **JSON Config** - Simple `artha.json` for settings
-- **@Step Annotation** - Simple route definition
-
----
-
-## 🏗️ Repository Structure
-
-```
-ARTHA/
-├── cli/              # Node.js CLI tool
-├── runtime/          # Java runtime engine
-├── examples/         # Example projects
-├── test-api/         # Test suite
-└── README.md
-```
-
-**CLI** (`/cli`): Project scaffolding, dev server, hot-reload
-**Runtime** (`/runtime`): HTTP server, annotation scanning, routing
-**Examples** (`/examples`): 01-hello-world and more
+**Why ARTHA?**
+- ⚡ **< 3s Startup**: Faster than Spring Boot.
+- 📦 **Zero Config**: No `pom.xml`, `build.gradle`, or XML files.
+- 🎯 **Hot Reload**: Changes apply instantly.
+- 🛠️ **Smart Injection**: Automatically injects what you need (`Request`, `Response`, `Connection`, etc.).
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Java 17 or higher
-- Node.js 14+
-
-### Installation
-
+### 1. Installation
+Install the CLI tool globally:
 ```bash
-npm install -g artha
-artha --version
+npm install -g artha-cli
+# Or from GitHub
+npm install -g github:ARTHA-sam/Artha_CLI
 ```
 
-### Create Your First App
-
+### 2. Create a Project
 ```bash
-artha new myapp
-cd myapp
+artha new my-app
+cd my-app
+```
+
+### 3. Run Dev Server
+```bash
 artha dev
 ```
-
-Open http://localhost:8080 in your browser!
-
----
-
-## ⚙️ Configuration
-
-Manage your app via **artha.json**:
-
-```json
-{
-  "port": 8080,
-  "env": "dev"
-}
-```
+Open `http://localhost:8080/hello` to see your app!
 
 ---
 
-## 📡 @Step Annotation Reference
+## ✨ Key Features
 
-### Basic Usage
-
-The `@Step` annotation marks a class as an API endpoint:
+### 1. The `@Step` Annotation
+Define routes with a single annotation. No separate controller classes or router configuration needed.
 
 ```java
 @Step(path = "/hello", method = "GET")
-public class HelloEndpoint {
-    public String handle(Request req, Response res) {
-        return "Hello, World!";
+public class Hello {
+    public String handle() {
+        return "Hello World!";
     }
 }
 ```
 
-### Annotation Parameters
+### 2. 🧠 Smart Parameter Injection
+ARTHA automatically detects what your `handle` method needs and injects it. You don't need to conform to a strict signature.
 
-- `path` (required): The URL path for the endpoint (e.g., "/users", "/api/products")
-- `method` (optional): HTTP method (default: "GET") - supports GET, POST, PUT, DELETE, etc.
+**Supported Parameters:**
+- `Request req`: Access query params, headers, body.
+- `Response res`: Set status codes, headers.
+- `Connection db`: **(New!)** Auto-injected JDBC connection (if DB is configured).
+- `MyDto body`: **(New!)** Auto-parsed JSON body if you define a POJO parameter.
 
-### Method Signature
+### 3. 💾 Zero-Config Database
+Built-in support for SQLite. Just add it to `artha.json` and start using it.
 
-Your handler method receives:
-- `Request req`: Contains query parameters, headers, request data
-- `Response res`: Used to set response headers or status codes
-- Returns: Response body (String, JSON, etc.)
+**artha.json:**
+```json
+{
+  "database": {
+    "driver": "sqlite",
+    "name": "mydb.db"
+  }
+}
+```
 
-### Examples
+**Usage:**
+```java
+@Step(path = "/users")
+public class GetUsers {
+    // DB Connection is automatically opened, injected, and closed!
+    public Object handle(Connection db) throws SQLException {
+        // Use standard JDBC
+        return "DB Connected!";
+    }
+}
+```
+
+---
+
+## 📚 Usage Examples
+
+### 1. JSON API with Input Validation
+ARTHA makes it easy to validate input and return JSON.
 
 ```java
-// GET endpoint
-@Step(path = "/greet", method = "GET")
-public class GreetHandler {
-    public String handle(Request req, Response res) {
-        String name = req.query("name", "Guest");
-        return "Hello, " + name + "!";
-    }
-}
-
-// POST endpoint
 @Step(path = "/users", method = "POST")
-public class CreateUserHandler {
-    public String handle(Request req, Response res) {
-        // Process POST data
-        return "{\"id\": 1, \"created\": true}";
+public class CreateUser {
+    public Object handle(Request req, Response res) {
+        User user = req.body(User.class);
+        
+        // Simple Validation
+        if (user.getName() == null || user.getName().isEmpty()) {
+            res.status(400);
+            return Map.of("error", "Name is required");
+        }
+
+        return Map.of("status", "created", "user", user);
     }
 }
+```
 
-// Dynamic path
-@Step(path = "/users/:id", method = "GET")
-public class GetUserHandler {
-    public String handle(Request req, Response res) {
-        String userId = req.pathParam("id");
-        return "{\"id\": " + userId + "}";
+### 2. Database CRUD (SQLite)
+Full example of a database-backed endpoint.
+
+```java
+@Step(path = "/todos", method = "GET")
+public class GetTodos {
+    public List<Todo> handle(Connection db) throws SQLException {
+        List<Todo> todos = new ArrayList<>();
+        try (Statement stmt = db.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM todos");
+            while (rs.next()) {
+                todos.add(new Todo(rs.getString("title")));
+            }
+        }
+        return todos; // Automatically serialized to JSON
     }
 }
 ```
 
 ---
 
-## 🎯 Why Choose ARTHA?
+## ⚙️ Configuration (`artha.json`)
 
-**For Students**: Learn backend without fighting configuration
-**For Hackathons**: Spin up APIs in seconds
-**For Educators**: Teach logic, not configuration
+Manage your project settings in `artha.json`.
+
+```json
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "server": {
+    "port": 9090
+  },
+  "database": {
+    "driver": "sqlite",
+    "name": "data.db"
+  },
+  "dependencies": {
+    "gson": "2.10.1",
+    "slf4j-simple": "2.0.11"
+  }
+}
+```
 
 ---
 
-## 🛣️ Roadmap
+## 🛣️ Roadmap & Future Plans
 
-- [ ] Request/Response body auto-parsing
-- [ ] Error handling middleware
-- [ ] Database helpers
-- [ ] JWT Auth support
-- [ ] WebSocket support
-- [ ] Docker integration
-- [ ] OpenAPI generation
-- [ ] Built-in testing framework
+We are constantly improving ARTHA. Here is what's done and what's coming:
+
+- [x] **CLI Tool**: Scaffolding, Hot-Reload, Dependency Management.
+- [x] **Smart Routing**: `@Step` annotation with method detection.
+- [x] **Database Support**: Zero-config SQLite integration.
+- [x] **Smart Injection**: Auto-inject `Connection`, `Request`, `Body`.
+- [x] **User Validation**: Basic structural validation and helpers.
+- [ ] **Authentication**: Built-in JWT support.
+- [ ] **OpenAPI / Swagger**: Auto-generated API documentation.
+- [ ] **Docker Support**: One-command containerization.
+- [ ] **Testing Framework**: Simple integration testing tools.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Especially from students making their first open-source contribution.
+1. Fork the repo.
+2. Create a branch (`feature/cool-thing`).
+3. Commit changes.
+4. Push and create a Pull Request.
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Commit: `git commit -m 'Add YourFeature'`
-4. Push: `git push origin feature/YourFeature`
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-MIT License. See LICENSE for details.
-
----
-
-## 📬 Support & Community
-
-- **GitHub Issues**: Report bugs or request features
-- **GitHub Discussions**: Join the conversation
-- **Email**: hello@arthaframework.org
-- **Twitter/X**: @ArthaFramework
-
----
-
-## 💡 Why We Built ARTHA
-
-Java's power shouldn't require a steep learning curve. We believe beginners should focus on logic, not configuration.
-
-Inspired by Flask and FastAPI, ARTHA brings that philosophy to Java.
-
----
-
-## 🎯 Made with ❤️ for the Java Community
-
-**Let's make Java fun again.** 🚀
-
-If ARTHA helped you, please give us a star! ⭐
+Let's make Java fun again! 🚀
