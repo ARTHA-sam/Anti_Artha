@@ -237,6 +237,9 @@ public class Runtime {
         Request req = new RequestImpl(ctx);
         Response res = new ResponseImpl(ctx);
 
+        // Track injected connection for auto-closing
+        Connection injectedConnection = null;
+
         // Smart Parameter Injection
         java.lang.reflect.Parameter[] params = method.getParameters();
         Object[] args = new Object[params.length];
@@ -252,7 +255,8 @@ public class Runtime {
             } else if (type == Connection.class) {
                 // Inject database connection
                 if (Database.getInstance().isInitialized()) {
-                    args[i] = Database.getInstance().getConnection();
+                    injectedConnection = Database.getInstance().getConnection();
+                    args[i] = injectedConnection;
                 } else {
                     throw new IllegalStateException("Database not configured! Add database section to artha.json");
                 }
@@ -286,15 +290,26 @@ public class Runtime {
             }
         }
 
-        method.setAccessible(true); // Allow calling package-private methods
-        Object result = method.invoke(instance, args);
+        try {
+            method.setAccessible(true); // Allow calling package-private methods
+            Object result = method.invoke(instance, args);
 
-        // Auto-serialize if not already handled
-        if (result != null) {
-            if (result instanceof String) {
-                ctx.result((String) result);
-            } else {
-                ctx.json(result);
+            // Auto-serialize if not already handled
+            if (result != null) {
+                if (result instanceof String) {
+                    ctx.result((String) result);
+                } else {
+                    ctx.json(result);
+                }
+            }
+        } finally {
+            // CRITICAL: Always close the injected database connection
+            if (injectedConnection != null) {
+                try {
+                    injectedConnection.close();
+                } catch (Exception e) {
+                    System.err.println("Warning: Failed to close database connection: " + e.getMessage());
+                }
             }
         }
     }

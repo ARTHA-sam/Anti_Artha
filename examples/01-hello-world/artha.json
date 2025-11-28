@@ -1,8 +1,18 @@
 {
-  "name": "hello-world",
+  "name": "todo-api",
   "version": "1.0.0",
   "srcDir": "src",
   "server": {
-    "port": 8080
+    "port": 9091
+  },
+  "database": {
+    "driver": "sqlite",
+    "name": "todos.db"
+  },
+  "dependencies": {
+    "gson": "2.10.1",
+    "sqlite": "3.45.1.0",
+    "slf4j-api": "2.0.11",
+    "slf4j-simple": "2.0.11"
   }
 }
