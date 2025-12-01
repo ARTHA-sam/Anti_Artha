@@ -26,6 +26,7 @@ public class DependencyLoader {
         DEPENDENCY_MAP.put("lombok", "org.projectlombok:lombok:1.18.42");
         DEPENDENCY_MAP.put("postgresql", "org.postgresql:postgresql:42.7.3");
         DEPENDENCY_MAP.put("mysql-connector", "com.mysql:mysql-connector-j:8.3.0");
+        DEPENDENCY_MAP.put("mysql", "com.mysql:mysql-connector-j:8.3.0"); // Alias for convenience
         DEPENDENCY_MAP.put("gson", "com.google.code.gson:gson:2.10.1");
         DEPENDENCY_MAP.put("jackson", "com.fasterxml.jackson.core:jackson-databind:2.16.1");
         DEPENDENCY_MAP.put("jackson-core", "com.fasterxml.jackson.core:jackson-core:2.16.1");

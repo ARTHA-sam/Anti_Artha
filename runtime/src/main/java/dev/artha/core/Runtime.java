@@ -186,19 +186,48 @@ public class Runtime {
 
     private static void registerMethodRoute(Javalin app, Method method) {
         try {
-            Step step = method.getAnnotation(Step.class);
-            String path = step.path();
-            String httpMethod = step.method().toUpperCase();
+            Step methodStep = method.getAnnotation(Step.class);
+            String methodPath = methodStep.path();
+            String httpMethod = methodStep.method().toUpperCase();
             Class<?> clazz = method.getDeclaringClass();
 
-            System.out.println(
-                    "  " + httpMethod + "  " + path + " → " + clazz.getSimpleName() + "." + method.getName() + "()");
+            // Check for Class-level @Step annotation for path nesting
+            String classPath = "";
+            if (clazz.isAnnotationPresent(Step.class)) {
+                Step classStep = clazz.getAnnotation(Step.class);
+                classPath = classStep.path();
+            }
 
-            registerHandler(app, httpMethod, path, ctx -> handleRequest(ctx, clazz, method));
+            // Combine paths
+            String fullPath = combinePaths(classPath, methodPath);
+
+            System.out.println(
+                    "  " + httpMethod + "  " + fullPath + " → " + clazz.getSimpleName() + "." + method.getName()
+                            + "()");
+
+            registerHandler(app, httpMethod, fullPath, ctx -> handleRequest(ctx, clazz, method));
         } catch (Exception e) {
             System.err.println("❌ Failed to register " + method.getName());
             e.printStackTrace();
         }
+    }
+
+    private static String combinePaths(String classPath, String methodPath) {
+        if (classPath == null || classPath.isEmpty()) {
+            return methodPath;
+        }
+
+        // Remove trailing slash from classPath
+        if (classPath.endsWith("/")) {
+            classPath = classPath.substring(0, classPath.length() - 1);
+        }
+
+        // Ensure methodPath starts with slash
+        if (!methodPath.startsWith("/")) {
+            methodPath = "/" + methodPath;
+        }
+
+        return classPath + methodPath;
     }
 
     private static void registerHandler(Javalin app, String method, String path, io.javalin.http.Handler handler) {
@@ -227,16 +256,51 @@ public class Runtime {
             java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor();
             constructor.setAccessible(true); // Allow package-private classes
             Object instance = constructor.newInstance();
-            invokeAndRespond(ctx, instance, method);
+
+            Request req = new RequestImpl(ctx);
+            Response res = new ResponseImpl(ctx);
+
+            // 1. Execute Class-level @Before
+            if (clazz.isAnnotationPresent(dev.artha.annotations.Before.class)) {
+                executeMiddleware(clazz.getAnnotation(dev.artha.annotations.Before.class).value(), req, res);
+            }
+
+            // 2. Execute Method-level @Before
+            if (method.isAnnotationPresent(dev.artha.annotations.Before.class)) {
+                executeMiddleware(method.getAnnotation(dev.artha.annotations.Before.class).value(), req, res);
+            }
+
+            // 3. Invoke Handler
+            invokeAndRespond(ctx, instance, method, req, res);
+
+            // 4. Execute Method-level @After
+            if (method.isAnnotationPresent(dev.artha.annotations.After.class)) {
+                executeMiddleware(method.getAnnotation(dev.artha.annotations.After.class).value(), req, res);
+            }
+
+            // 5. Execute Class-level @After
+            if (clazz.isAnnotationPresent(dev.artha.annotations.After.class)) {
+                executeMiddleware(clazz.getAnnotation(dev.artha.annotations.After.class).value(), req, res);
+            }
+
         } catch (Exception e) {
             handleError(ctx, e);
         }
     }
 
-    private static void invokeAndRespond(io.javalin.http.Context ctx, Object instance, Method method) throws Exception {
-        Request req = new RequestImpl(ctx);
-        Response res = new ResponseImpl(ctx);
+    private static void executeMiddleware(Class<? extends dev.artha.http.Middleware>[] middlewares, Request req,
+            Response res) throws Exception {
+        for (Class<? extends dev.artha.http.Middleware> middlewareClass : middlewares) {
+            java.lang.reflect.Constructor<? extends dev.artha.http.Middleware> constructor = middlewareClass
+                    .getDeclaredConstructor();
+            constructor.setAccessible(true); // Allow package-private middleware
+            dev.artha.http.Middleware middleware = constructor.newInstance();
+            middleware.apply(req, res);
+        }
+    }
 
+    private static void invokeAndRespond(io.javalin.http.Context ctx, Object instance, Method method, Request req,
+            Response res) throws Exception {
         // Track injected connection for auto-closing
         Connection injectedConnection = null;
 
