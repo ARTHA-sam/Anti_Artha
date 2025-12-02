@@ -67,6 +67,15 @@ public class RequestImpl implements Request {
     }
 
     @Override
+    public Map<String, Object> bodyAsMap() {
+        try {
+            return ctx.bodyAsClass(Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse body as Map: " + e.getMessage());
+        }
+    }
+
+    @Override
     public String header(String key) {
         return ctx.header(key);
     }
@@ -91,5 +100,10 @@ public class RequestImpl implements Request {
     @Override
     public String ip() {
         return ctx.ip();
+    }
+
+    @Override
+    public String path() {
+        return ctx.path();
     }
 }

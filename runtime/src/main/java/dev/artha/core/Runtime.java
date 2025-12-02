@@ -252,10 +252,8 @@ public class Runtime {
 
     private static void handleRequest(io.javalin.http.Context ctx, Class<?> clazz, Method method) {
         try {
-            // Simple instantiation (could be upgraded to DI later)
-            java.lang.reflect.Constructor<?> constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true); // Allow package-private classes
-            Object instance = constructor.newInstance();
+            // Use DI container for instance creation (supports @Inject)
+            Object instance = DIContainer.getInstance().get(clazz);
 
             Request req = new RequestImpl(ctx);
             Response res = new ResponseImpl(ctx);
@@ -291,10 +289,8 @@ public class Runtime {
     private static void executeMiddleware(Class<? extends dev.artha.http.Middleware>[] middlewares, Request req,
             Response res) throws Exception {
         for (Class<? extends dev.artha.http.Middleware> middlewareClass : middlewares) {
-            java.lang.reflect.Constructor<? extends dev.artha.http.Middleware> constructor = middlewareClass
-                    .getDeclaredConstructor();
-            constructor.setAccessible(true); // Allow package-private middleware
-            dev.artha.http.Middleware middleware = constructor.newInstance();
+            // Use DI container to get middleware instance
+            dev.artha.http.Middleware middleware = DIContainer.getInstance().get(middlewareClass);
             middleware.apply(req, res);
         }
     }

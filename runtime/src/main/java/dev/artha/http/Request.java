@@ -23,6 +23,8 @@ public interface Request {
 
     String bodyAsString();
 
+    Map<String, Object> bodyAsMap();
+
     // Headers
     String header(String key);
 
@@ -34,4 +36,6 @@ public interface Request {
     String url();
 
     String ip();
+
+    String path(); // Full request path
 }

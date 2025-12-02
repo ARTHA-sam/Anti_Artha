@@ -104,6 +104,13 @@ public class Database {
     }
 
     /**
+     * Create a QueryBuilder for the specified table
+     */
+    public QueryBuilder table(String tableName) throws SQLException {
+        return new QueryBuilder(getConnection(), tableName);
+    }
+
+    /**
      * Shutdown the connection pool
      */
     public void shutdown() {
