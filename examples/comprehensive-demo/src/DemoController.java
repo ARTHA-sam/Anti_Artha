@@ -27,13 +27,12 @@ public class DemoController {
 
     // GET /api/products/{id} - Get product by ID
     @Step(path = "/products/{id}", method = "GET")
-    public Object getProduct(Request req, Response res) throws Exception {
+    public Object getProduct(Request req) throws Exception {
         String id = req.param("id");
         Object product = productService.getProductById(id);
 
         if (product == null) {
-            res.status(404);
-            return Map.of("error", "Product not found");
+            throw new ProductNotFoundException(id);
         }
 
         return product;
@@ -55,6 +54,14 @@ public class DemoController {
         Map<String, Object> body = req.bodyAsMap();
 
         String name = (String) body.get("name");
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidInputException("Product name is required");
+        }
+
+        if (!body.containsKey("price")) {
+            throw new InvalidInputException("Product price is required");
+        }
+
         double price = ((Number) body.get("price")).doubleValue();
         int stock = ((Number) body.getOrDefault("stock", 0)).intValue();
 
@@ -68,15 +75,14 @@ public class DemoController {
 
     // PUT /api/products/{id} - Update product
     @Step(path = "/products/{id}", method = "PUT")
-    public Object updateProduct(Request req, Response res) throws Exception {
+    public Object updateProduct(Request req) throws Exception {
         String id = req.param("id");
         Map<String, Object> updates = req.bodyAsMap();
 
         int affected = productService.updateProduct(id, updates);
 
         if (affected == 0) {
-            res.status(404);
-            return Map.of("error", "Product not found");
+            throw new ProductNotFoundException(id);
         }
 
         return Map.of("message", "Product updated");
@@ -84,14 +90,13 @@ public class DemoController {
 
     // DELETE /api/products/{id} - Delete product
     @Step(path = "/products/{id}", method = "DELETE")
-    public Object deleteProduct(Request req, Response res) throws Exception {
+    public Object deleteProduct(Request req) throws Exception {
         String id = req.param("id");
 
         int affected = productService.deleteProduct(id);
 
         if (affected == 0) {
-            res.status(404);
-            return Map.of("error", "Product not found");
+            throw new ProductNotFoundException(id);
         }
 
         return Map.of("message", "Product deleted");
@@ -106,7 +111,28 @@ public class DemoController {
                         "Middleware",
                         "Dependency Injection",
                         "Query Builder",
+                        "Exception Handling",
                         "RESTful API"
                 });
+    }
+
+    // Exception Handlers
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public Object handleProductNotFound(Exception e, Request req, Response res) {
+        res.status(404);
+        return Map.of(
+                "error", "Not Found",
+                "message", e.getMessage(),
+                "path", req.path());
+    }
+
+    @ExceptionHandler(InvalidInputException.class)
+    public Object handleInvalidInput(Exception e, Request req, Response res) {
+        res.status(400);
+        return Map.of(
+                "error", "Bad Request",
+                "message", e.getMessage(),
+                "path", req.path());
     }
 }

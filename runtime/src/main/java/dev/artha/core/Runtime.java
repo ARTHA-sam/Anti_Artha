@@ -35,6 +35,19 @@ public class Runtime {
 
     private static final Validator validator;
 
+    // Exception handler registry: Exception class -> Handler info
+    private static final Map<Class<? extends Exception>, ExceptionHandlerInfo> exceptionHandlers = new HashMap<>();
+
+    private static class ExceptionHandlerInfo {
+        Class<?> controllerClass;
+        Method handlerMethod;
+
+        ExceptionHandlerInfo(Class<?> controllerClass, Method handlerMethod) {
+            this.controllerClass = controllerClass;
+            this.handlerMethod = handlerMethod;
+        }
+    }
+
     // Internal exception to handle validation failures during request processing
     private static class RequestValidationException extends RuntimeException {
         private final Set<ConstraintViolation<Object>> violations;
@@ -124,6 +137,17 @@ public class Runtime {
         // Register Method-based routes (New)
         for (Method method : stepMethods) {
             registerMethodRoute(app, method);
+        }
+
+        // Scan and register @ExceptionHandler methods
+        Set<Method> exceptionHandlerMethods = reflections
+                .getMethodsAnnotatedWith(dev.artha.annotations.ExceptionHandler.class);
+        for (Method method : exceptionHandlerMethods) {
+            registerExceptionHandler(method);
+        }
+
+        if (!exceptionHandlers.isEmpty()) {
+            System.out.println("\n🛡️  Registered " + exceptionHandlers.size() + " exception handler(s)\n");
         }
 
         app.start(port);
@@ -375,17 +399,47 @@ public class Runtime {
     }
 
     private static void handleError(io.javalin.http.Context ctx, Exception e) {
+        // Unwrap InvocationTargetException to get the real cause
+        Exception actualException = e;
+        if (e.getCause() instanceof Exception) {
+            actualException = (Exception) e.getCause();
+        }
+
+        // Try to find a matching exception handler
+        ExceptionHandlerInfo handler = findExceptionHandler(actualException.getClass());
+
+        if (handler != null) {
+            try {
+                // Invoke the exception handler
+                Object controllerInstance = DIContainer.getInstance().get(handler.controllerClass);
+                Request req = new RequestImpl(ctx);
+                Response res = new ResponseImpl(ctx);
+
+                handler.handlerMethod.setAccessible(true);
+                Object result = handler.handlerMethod.invoke(controllerInstance, actualException, req, res);
+
+                if (result != null) {
+                    if (result instanceof String) {
+                        ctx.result((String) result);
+                    } else {
+                        ctx.json(result);
+                    }
+                }
+                return;
+            } catch (Exception handlerException) {
+                System.err.println("Exception handler failed: " + handlerException.getMessage());
+                handlerException.printStackTrace();
+                // Fall through to default error handling
+            }
+        }
+
+        // Default error handling
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", true);
 
-        // Unwrap InvocationTargetException to get the real cause
-        Throwable cause = e.getCause();
-
         // Check for our custom validation exception
-        if (cause instanceof RequestValidationException || e instanceof RequestValidationException) {
-            RequestValidationException ve = (e instanceof RequestValidationException)
-                    ? (RequestValidationException) e
-                    : (RequestValidationException) cause;
+        if (actualException instanceof RequestValidationException) {
+            RequestValidationException ve = (RequestValidationException) actualException;
 
             errorResponse.put("message", "Validation failed");
 
@@ -401,11 +455,41 @@ public class Runtime {
             ctx.status(400).json(errorResponse);
         } else {
             // Handle other errors
-            errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "Internal server error");
+            errorResponse.put("message",
+                    actualException.getMessage() != null ? actualException.getMessage() : "Internal server error");
             errorResponse.put("path", ctx.path() != null ? ctx.path() : "unknown");
             ctx.status(500).json(errorResponse);
-            e.printStackTrace();
+            actualException.printStackTrace();
         }
+    }
+
+    private static void registerExceptionHandler(Method method) {
+        dev.artha.annotations.ExceptionHandler annotation = method
+                .getAnnotation(dev.artha.annotations.ExceptionHandler.class);
+        Class<? extends Exception>[] exceptionTypes = annotation.value();
+        Class<?> controllerClass = method.getDeclaringClass();
+
+        for (Class<? extends Exception> exceptionType : exceptionTypes) {
+            exceptionHandlers.put(exceptionType, new ExceptionHandlerInfo(controllerClass, method));
+            System.out.println("  🛡️  " + exceptionType.getSimpleName() + " → " + controllerClass.getSimpleName() + "."
+                    + method.getName() + "()");
+        }
+    }
+
+    private static ExceptionHandlerInfo findExceptionHandler(Class<?> exceptionClass) {
+        // Try exact match first
+        if (exceptionHandlers.containsKey(exceptionClass)) {
+            return exceptionHandlers.get(exceptionClass);
+        }
+
+        // Try to find handler for parent exception class
+        for (Map.Entry<Class<? extends Exception>, ExceptionHandlerInfo> entry : exceptionHandlers.entrySet()) {
+            if (entry.getKey().isAssignableFrom(exceptionClass)) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
     }
 
     private static Map<String, Object> loadConfig() {
