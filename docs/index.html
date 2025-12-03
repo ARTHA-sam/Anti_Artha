@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="ARTHA - A modern, powerful Java web framework. Build production-ready APIs with elegance.">
+    <title>ARTHA Framework - Modern Java Backend Framework</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo-container">
+                    <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+                        <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="url(#gradient1)" />
+                        <defs>
+                            <linearGradient id="gradient1" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#8B5CF6" />
+                                <stop offset="100%" stop-color="#EC4899" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="logo-text">ARTHA</span>
+                </div>
+                <div class="nav-menu">
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#showcase" class="nav-link">Showcase</a>
+                    <a href="#docs" class="nav-link">Docs</a>
+                    <a href="https://github.com/ARTHA-sam/Anti_Artha" class="nav-link-special">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-dot"></span>
+                    Modern Java Framework
+                </div>
+                <h1 class="hero-title">
+                    Build Backend APIs
+                    <span class="gradient-text-animated">Like a Pro</span>
+                </h1>
+                <p class="hero-description">
+                    ARTHA brings Spring Boot's elegance to education. Dependency Injection,
+                    Middleware, Query Builder, Exception Handling - everything you need in one powerful framework.
+                </p>
+                <div class="hero-actions">
+                    <a href="#quick-start" class="btn-gradient">
+                        <span>Get Started</span>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                    <a href="https://github.com/ARTHA-sam/Anti_Artha" class="btn-glass">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                        </svg>
+                        <span>View Source</span>
+                    </a>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">9+</div>
+                        <div class="stat-label">Core Features</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">SQL Safe</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">Zero</div>
+                        <div class="stat-label">Configuration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Code Terminal -->
+            <div class="hero-terminal">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="btn-red"></span>
+                            <span class="btn-yellow"></span>
+                            <span class="btn-green"></span>
+                        </div>
+                        <div class="terminal-title">MyController.java</div>
+                        <div class="terminal-actions">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+                                <path
+                                    d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="terminal-body">
+                        <pre><code><span class="code-keyword">@Step</span>(path = <span class="code-string">"/api"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">UserController</span> {
+    
+    <span class="code-comment">// Automatic Dependency Injection</span>
+    <span class="code-annotation">@Inject</span>
+    <span class="code-keyword">private</span> <span class="code-class">UserService</span> userService;
+    
+    <span class="code-comment">// RESTful Routing</span>
+    <span class="code-annotation">@Step</span>(path = <span class="code-string">"/users"</span>, method = <span class="code-string">"GET"</span>)
+    <span class="code-keyword">public</span> List&lt;User&gt; <span class="code-function">getUsers</span>() {
+        <span class="code-keyword">return</span> userService.<span class="code-function">findAll</span>();
+    }
+    
+    <span class="code-comment">// Exception Handling</span>
+    <span class="code-annotation">@ExceptionHandler</span>(NotFoundException.<span class="code-keyword">class</span>)
+    <span class="code-keyword">public</span> Object <span class="code-function">handleNotFound</span>(Exception e) {
+        <span class="code-keyword">return</span> Map.<span class="code-function">of</span>(<span class="code-string">"error"</span>, e.<span class="code-function">getMessage</span>());
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Showcase -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">Everything You Need, <span class="gradient-text">Nothing You Don't</span></h2>
+                <p class="section-subtitle">Powerful features that scale with your learning</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">🎯</div>
+                    </div>
+                    <h3>RESTful Routing</h3>
+                    <p>Annotation-based routing with @Step. Clean, intuitive endpoints that make sense.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Type-Safe</span>
+                        <span class="tag">Declarative</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card featured">
+                    <div class="feature-badge">Most Popular</div>
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">💉</div>
+                    </div>
+                    <h3>Dependency Injection</h3>
+                    <p>Automatic DI with @Inject. Singleton scope. Zero configuration required.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Automatic</span>
+                        <span class="tag">Singleton</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">🗄️</div>
+                    </div>
+                    <h3>Query Builder</h3>
+                    <p>Fluent, SQL-injection-safe database operations. Beautiful and secure.</p>
+                    <div class="feature-tags">
+                        <span class="tag">SQL-Safe</span>
+                        <span class="tag">Fluent API</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">🛡️</div>
+                    </div>
+                    <h3>Middleware</h3>
+                    <p>@Before and @After interceptors for auth, logging, and cross-cutting concerns.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Composable</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">⚠️</div>
+                    </div>
+                    <h3>Exception Handling</h3>
+                    <p>Custom @ExceptionHandler methods. Clean, centralized error management.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Centralized</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">⚙️</div>
+                    </div>
+                    <h3>Config Injection</h3>
+                    <p>@ConfigValue to inject from artha.json. Type-safe configuration management.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Type-Safe</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">⏰</div>
+                    </div>
+                    <h3>Scheduled Tasks</h3>
+                    <p>@Scheduled for background jobs. Cron-like scheduling made simple.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Background</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">✅</div>
+                    </div>
+                    <h3>Bean Validation</h3>
+                    <p>Hibernate Validator integration. Validate models with annotations.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Built-in</span>
+                    </div>
+                </div>
+
+                <div class="feature-glass-card">
+                    <div class="feature-icon-wrapper">
+                        <div class="icon-gradient">🔄</div>
+                    </div>
+                    <h3>JSON Auto-Serialization</h3>
+                    <p>Jackson-powered JSON handling. Request/Response automatic mapping.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Automatic</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Showcase -->
+    <section id="showcase" class="code-showcase">
+        <div class="container">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">See the <span class="gradient-text">Magic</span> in Action</h2>
+                <p class="section-subtitle">Real code examples that actually work</p>
+            </div>
+
+            <div class="showcase-tabs">
+                <button class="showcase-tab active" data-example="di">
+                    <span>Dependency Injection</span>
+                </button>
+                <button class="showcase-tab" data-example="query">
+                    <span>Query Builder</span>
+                </button>
+                <button class="showcase-tab" data-example="middleware">
+                    <span>Middleware</span>
+                </button>
+                <button class="showcase-tab" data-example="exception">
+                    <span>Exception Handling</span>
+                </button>
+            </div>
+
+            <div class="showcase-examples">
+                <!-- DI Example -->
+                <div class="example-card active" data-example="di">
+                    <div class="example-terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-red"></span>
+                                <span class="btn-yellow"></span>
+                                <span class="btn-green"></span>
+                            </div>
+                            <div class="terminal-title">UserController.java</div>
+                        </div>
+                        <div class="terminal-body">
+                            <pre><code><span class="code-keyword">public class</span> <span class="code-class">UserService</span> {
+    <span class="code-keyword">public</span> List&lt;User&gt; <span class="code-function">findAll</span>() { <span class="code-comment">/* ... */</span> }
+}
+
+<span class="code-annotation">@Step</span>(path = <span class="code-string">"/users"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">UserController</span> {
+    
+    <span class="code-annotation">@Inject</span>  <span class="code-comment">// Auto-injected singleton!</span>
+    <span class="code-keyword">private</span> <span class="code-class">UserService</span> userService;
+    
+    <span class="code-annotation">@Step</span>(path = <span class="code-string">""</span>, method = <span class="code-string">"GET"</span>)
+    <span class="code-keyword">public</span> List&lt;User&gt; <span class="code-function">getAll</span>() {
+        <span class="code-keyword">return</span> userService.<span class="code-function">findAll</span>();
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Query Builder Example -->
+                <div class="example-card" data-example="query">
+                    <div class="example-terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-red"></span>
+                                <span class="btn-yellow"></span>
+                                <span class="btn-green"></span>
+                            </div>
+                            <div class="terminal-title">ProductService.java</div>
+                        </div>
+                        <div class="terminal-body">
+                            <pre><code><span class="code-comment">// SELECT with WHERE, ORDER BY, LIMIT</span>
+List&lt;Product&gt; products = db.<span class="code-function">table</span>(<span class="code-string">"products"</span>)
+    .<span class="code-function">where</span>(<span class="code-string">"price"</span>, <span class="code-string">"&lt;"</span>, <span class="code-number">100</span>)
+    .<span class="code-function">orderBy</span>(<span class="code-string">"name"</span>, <span class="code-string">"ASC"</span>)
+    .<span class="code-function">limit</span>(<span class="code-number">10</span>)
+    .<span class="code-function">get</span>(Product.<span class="code-keyword">class</span>);
+
+<span class="code-comment">// INSERT - Returns generated ID</span>
+<span class="code-keyword">int</span> id = db.<span class="code-function">table</span>(<span class="code-string">"products"</span>)
+    .<span class="code-function">insert</span>(Map.<span class="code-function">of</span>(
+        <span class="code-string">"name"</span>, <span class="code-string">"Gaming Mouse"</span>,
+        <span class="code-string">"price"</span>, <span class="code-number">79.99</span>,
+        <span class="code-string">"stock"</span>, <span class="code-number">150</span>
+    ));
+
+<span class="code-comment">// UPDATE</span>
+db.<span class="code-function">table</span>(<span class="code-string">"products"</span>)
+    .<span class="code-function">where</span>(<span class="code-string">"id"</span>, id)
+    .<span class="code-function">update</span>(Map.<span class="code-function">of</span>(<span class="code-string">"price"</span>, <span class="code-number">69.99</span>));
+
+<span class="code-comment">// 100% SQL Injection Safe ✅</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middleware Example -->
+                <div class="example-card" data-example="middleware">
+                    <div class="example-terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-red"></span>
+                                <span class="btn-yellow"></span>
+                                <span class="btn-green"></span>
+                            </div>
+                            <div class="terminal-title">AuthMiddleware.java</div>
+                        </div>
+                        <div class="terminal-body">
+                            <pre><code><span class="code-keyword">public class</span> <span class="code-class">AuthMiddleware</span> <span class="code-keyword">implements</span> <span class="code-class">Middleware</span> {
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">public void</span> <span class="code-function">apply</span>(Request req, Response res) 
+            <span class="code-keyword">throws</span> Exception {
+        String token = req.<span class="code-function">header</span>(<span class="code-string">"Authorization"</span>);
+        
+        <span class="code-keyword">if</span> (token == <span class="code-keyword">null</span> || !<span class="code-function">isValid</span>(token)) {
+            res.<span class="code-function">status</span>(<span class="code-number">401</span>);
+            <span class="code-keyword">throw new</span> <span class="code-class">UnauthorizedException</span>();
+        }
+    }
+}
+
+<span class="code-comment">// Apply to controller</span>
+<span class="code-annotation">@Step</span>(path = <span class="code-string">"/api/secure"</span>)
+<span class="code-annotation">@Before</span>({<span class="code-class">AuthMiddleware</span>.<span class="code-keyword">class</span>})
+<span class="code-keyword">public class</span> <span class="code-class">SecureController</span> {
+    <span class="code-comment">// All endpoints protected ✅</span>
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exception Handling Example -->
+                <div class="example-card" data-example="exception">
+                    <div class="example-terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="btn-red"></span>
+                                <span class="btn-yellow"></span>
+                                <span class="btn-green"></span>
+                            </div>
+                            <div class="terminal-title">ErrorHandling.java</div>
+                        </div>
+                        <div class="terminal-body">
+                            <pre><code><span class="code-annotation">@Step</span>(path = <span class="code-string">"/users/{id}"</span>, method = <span class="code-string">"GET"</span>)
+<span class="code-keyword">public</span> User <span class="code-function">getUser</span>(Request req) <span class="code-keyword">throws</span> Exception {
+    String id = req.<span class="code-function">param</span>(<span class="code-string">"id"</span>);
+    User user = userService.<span class="code-function">findById</span>(id);
+    
+    <span class="code-keyword">if</span> (user == <span class="code-keyword">null</span>) {
+        <span class="code-keyword">throw new</span> <span class="code-class">NotFoundException</span>(<span class="code-string">"User not found"</span>);
+    }
+    
+    <span class="code-keyword">return</span> user;
+}
+
+<span class="code-comment">// Global exception handler</span>
+<span class="code-annotation">@ExceptionHandler</span>(NotFoundException.<span class="code-keyword">class</span>)
+<span class="code-keyword">public</span> Object <span class="code-function">handleNotFound</span>(Exception e, Response res) {
+    res.<span class="code-function">status</span>(<span class="code-number">404</span>);
+    <span class="code-keyword">return</span> Map.<span class="code-function">of</span>(
+        <span class="code-string">"error"</span>, <span class="code-string">"Not Found"</span>,
+        <span class="code-string">"message"</span>, e.<span class="code-function">getMessage</span>()
+    );
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section id="quick-start" class="quick-start">
+        <div class="container">
+            <div class="section-title-wrapper">
+                <h2 class="section-title">Start Building in <span class="gradient-text">60 Seconds</span></h2>
+                <p class="section-subtitle">Three steps from zero to API</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">
+                        <span>01</span>
+                    </div>
+                    <h3>Configure</h3>
+                    <p>Create artha.json</p>
+                    <div class="step-code">
+                        <pre><code>{
+  "port": 8080
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">
+                        <span>02</span>
+                    </div>
+                    <h3>Code</h3>
+                    <p>Write your controller</p>
+                    <div class="step-code">
+                        <pre><code><span class="code-annotation">@Step</span>(path = <span class="code-string">"/api"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">API</span> {
+  <span class="code-annotation">@Step</span>(path = <span class="code-string">"/hello"</span>)
+  String <span class="code-function">hello</span>() {
+    <span class="code-keyword">return</span> <span class="code-string">"✨"</span>;
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">
+                        <span>03</span>
+                    </div>
+                    <h3>Run</h3>
+                    <p>Start the server</p>
+                    <div class="step-code">
+                        <pre><code>javac -cp artha-runtime.jar API.java
+java -cp artha-runtime.jar;. \
+  dev.artha.core.Runtime
+
+Server started ✓</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <div class="cta-card">
+                    <h3>🚀 Ready to build something amazing?</h3>
+                    <p>Join developers who are learning with ARTHA</p>
+                    <div class="cta-actions">
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/blob/master/README.md" class="btn-gradient">
+                            <span>Read Documentation</span>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha" class="btn-glass">
+                            <span>View on GitHub</span>
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo-container">
+                        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+                            <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="url(#gradient2)" />
+                            <defs>
+                                <linearGradient id="gradient2" x1="0" y1="0" x2="40" y2="40">
+                                    <stop offset="0%" stop-color="#8B5CF6" />
+                                    <stop offset="100%" stop-color="#EC4899" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span class="logo-text">ARTHA</span>
+                    </div>
+                    <p>Modern Java Framework for Education</p>
+                    <p class="footer-tagline">Built with ❤️ for students learning backend development</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/blob/master/README.md">Documentation</a>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/tree/master/examples">Examples</a>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/blob/master/README.md#-api-reference">API
+                            Reference</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Community</h4>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha">GitHub</a>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/issues">Issues</a>
+                        <a href="https://github.com/ARTHA-sam/Anti_Artha/discussions">Discussions</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ARTHA Framework. MIT License.</p>
+                <div class="footer-badges">
+                    <span class="badge">Java 11+</span>
+                    <span class="badge">Open Source</span>
+                    <span class="badge">MIT</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
