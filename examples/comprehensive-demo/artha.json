@@ -3,5 +3,14 @@
     "database": {
         "driver": "sqlite",
         "name": "demo.db"
+    },
+    "app": {
+        "name": "ARTHA Demo",
+        "version": "1.0.0",
+        "maxProductsPerPage": 50
+    },
+    "features": {
+        "enableLogging": true,
+        "debugMode": false
     }
 }

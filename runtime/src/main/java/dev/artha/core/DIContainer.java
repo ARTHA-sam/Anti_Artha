@@ -60,8 +60,9 @@ public class DIContainer {
     public void injectDependencies(Object target) {
         Class<?> clazz = target.getClass();
 
-        // Inject all fields marked with @Inject
+        // Inject all fields marked with @Inject or @ConfigValue
         for (Field field : clazz.getDeclaredFields()) {
+            // Handle @Inject
             if (field.isAnnotationPresent(Inject.class)) {
                 try {
                     field.setAccessible(true);
@@ -74,7 +75,49 @@ public class DIContainer {
                             e);
                 }
             }
+
+            // Handle @ConfigValue
+            if (field.isAnnotationPresent(dev.artha.annotations.ConfigValue.class)) {
+                try {
+                    dev.artha.annotations.ConfigValue annotation = field
+                            .getAnnotation(dev.artha.annotations.ConfigValue.class);
+                    String configKey = annotation.value();
+
+                    field.setAccessible(true);
+                    Object configValue = ConfigManager.getInstance().get(configKey);
+
+                    if (configValue == null) {
+                        throw new IllegalStateException("Config key '" + configKey + "' not found in artha.json");
+                    }
+
+                    // Convert to appropriate type
+                    Object typedValue = convertConfigValue(configValue, field.getType());
+                    field.set(target, typedValue);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Failed to inject config value into " + clazz.getName() + "." + field.getName(),
+                            e);
+                }
+            }
         }
+    }
+
+    /**
+     * Convert config value to the target field type
+     */
+    private Object convertConfigValue(Object value, Class<?> targetType) {
+        if (targetType == String.class) {
+            return value.toString();
+        } else if (targetType == int.class || targetType == Integer.class) {
+            return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
+        } else if (targetType == double.class || targetType == Double.class) {
+            return value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
+        } else if (targetType == boolean.class || targetType == Boolean.class) {
+            return value instanceof Boolean ? value : Boolean.parseBoolean(value.toString());
+        } else if (targetType == long.class || targetType == Long.class) {
+            return value instanceof Number ? ((Number) value).longValue() : Long.parseLong(value.toString());
+        }
+        return value;
     }
 
     /**

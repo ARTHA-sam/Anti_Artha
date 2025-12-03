@@ -83,6 +83,9 @@ public class Runtime {
         // Load artha.json configuration
         Map<String, Object> arthaConfig = loadConfig();
 
+        // Initialize ConfigManager
+        ConfigManager.getInstance().loadConfig(arthaConfig);
+
         // Initialize database if configured
         if (arthaConfig.containsKey("database")) {
             try {
@@ -148,6 +151,16 @@ public class Runtime {
 
         if (!exceptionHandlers.isEmpty()) {
             System.out.println("\n🛡️  Registered " + exceptionHandlers.size() + " exception handler(s)\n");
+        }
+
+        // Scan and register @Scheduled methods
+        Set<Method> scheduledMethods = reflections.getMethodsAnnotatedWith(dev.artha.annotations.Scheduled.class);
+        if (!scheduledMethods.isEmpty()) {
+            System.out.println("⏰ Registering scheduled tasks...\n");
+            for (Method method : scheduledMethods) {
+                registerScheduledTask(method);
+            }
+            System.out.println();
         }
 
         app.start(port);
@@ -490,6 +503,28 @@ public class Runtime {
         }
 
         return null;
+    }
+
+    private static void registerScheduledTask(Method method) {
+        dev.artha.annotations.Scheduled annotation = method.getAnnotation(dev.artha.annotations.Scheduled.class);
+        long fixedRate = annotation.fixedRate();
+        Class<?> clazz = method.getDeclaringClass();
+
+        // Validate method signature
+        if (method.getReturnType() != void.class) {
+            throw new IllegalArgumentException(
+                    "@Scheduled method must return void: " + clazz.getName() + "." + method.getName());
+        }
+        if (method.getParameterCount() != 0) {
+            throw new IllegalArgumentException(
+                    "@Scheduled method cannot have parameters: " + clazz.getName() + "." + method.getName());
+        }
+
+        // Get instance via DI container
+        Object instance = DIContainer.getInstance().get(clazz);
+
+        // Schedule the task
+        TaskScheduler.getInstance().scheduleFixedRate(instance, method, fixedRate);
     }
 
     private static Map<String, Object> loadConfig() {

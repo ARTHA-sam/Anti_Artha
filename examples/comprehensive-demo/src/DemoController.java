@@ -19,6 +19,9 @@ public class DemoController {
     @Inject
     private ProductService productService;
 
+    @Inject
+    private AppConfig appConfig;
+
     // GET /api/products - List all products
     @Step(path = "/products", method = "GET")
     public Object listProducts() throws Exception {
@@ -112,8 +115,21 @@ public class DemoController {
                         "Dependency Injection",
                         "Query Builder",
                         "Exception Handling",
+                        "Configuration Injection",
                         "RESTful API"
                 });
+    }
+
+    // GET /api/config - Show config values
+    @Step(path = "/config", method = "GET")
+    public Object getConfig() {
+        return Map.of(
+                "appName", appConfig.getAppName(),
+                "version", appConfig.getAppVersion(),
+                "maxProductsPerPage", appConfig.getMaxProductsPerPage(),
+                "loggingEnabled", appConfig.isLoggingEnabled(),
+                "debugMode", appConfig.isDebugMode(),
+                "info", appConfig.getInfo());
     }
 
     // Exception Handlers
