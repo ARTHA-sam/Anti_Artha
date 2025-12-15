@@ -92,6 +92,9 @@ public class Runtime {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> dbConfig = (Map<String, Object>) arthaConfig.get("database");
                 Database.getInstance().initialize(dbConfig);
+
+                // Register Database singleton with DI container for @Inject support
+                DIContainer.getInstance().registerInstance(Database.class, Database.getInstance());
             } catch (Exception e) {
                 System.err.println("⚠️  Database initialization failed: " + e.getMessage());
             }

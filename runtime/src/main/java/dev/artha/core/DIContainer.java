@@ -23,6 +23,7 @@ public class DIContainer {
      * Register a manually created instance.
      */
     public <T> void registerInstance(Class<T> type, T instance) {
+        System.out.println("DIContainer: Registering instance for " + type.getName());
         instances.put(type, instance);
     }
 
@@ -32,11 +33,28 @@ public class DIContainer {
      */
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> type) {
+        // Special handling for Database singleton to ensure we always get the
+        // initialized instance
+        if (type.getName().equals("dev.artha.db.Database")) {
+            try {
+                // Use reflection to verify it has getInstance method (avoid compile-time
+                // dependency cycle if checked strictly)
+                java.lang.reflect.Method getInstance = type.getMethod("getInstance");
+                return (T) getInstance.invoke(null);
+            } catch (Exception e) {
+                System.err.println("⚠️  Failed to get Database instance via singleton: " + e.getMessage());
+                // Fallthrough to normal creation if fails (though it shouldn't)
+            }
+        }
+
         // Check if instance already exists (singleton)
         Object existing = instances.get(type);
         if (existing != null) {
+            System.out.println("DIContainer: Returning existing instance for " + type.getName());
             return (T) existing;
         }
+
+        System.out.println("DIContainer: Creating NEW instance for " + type.getName());
 
         // Create new instance
         try {

@@ -111,6 +111,52 @@ public class Database {
     }
 
     /**
+     * Execute raw SQL query with parameters
+     * 
+     * @param sql    SQL query with ? placeholders
+     * @param params Parameters for placeholders
+     * @return List of result rows as Maps
+     */
+    public java.util.List<Map<String, Object>> execute(String sql, Object... params) {
+        try (Connection conn = getConnection()) {
+            java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+
+            // Set parameters
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+
+            // Execute query
+            if (sql.trim().toUpperCase().startsWith("SELECT")) {
+                java.sql.ResultSet rs = stmt.executeQuery();
+                java.util.List<Map<String, Object>> results = new java.util.ArrayList<>();
+
+                while (rs.next()) {
+                    Map<String, Object> row = new java.util.HashMap<>();
+                    java.sql.ResultSetMetaData metaData = rs.getMetaData();
+                    int columnCount = metaData.getColumnCount();
+
+                    for (int i = 1; i <= columnCount; i++) {
+                        String columnName = metaData.getColumnName(i);
+                        Object value = rs.getObject(i);
+                        row.put(columnName, value);
+                    }
+
+                    results.add(row);
+                }
+
+                return results;
+            } else {
+                // For INSERT/UPDATE/DELETE
+                stmt.executeUpdate();
+                return new java.util.ArrayList<>();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("SQL execution failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Shutdown the connection pool
      */
     public void shutdown() {

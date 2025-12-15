@@ -1,0 +1,7 @@
+build/
+*.class
+.idea/
+.vscode/
+demo.db
+*.log
+node_modules/

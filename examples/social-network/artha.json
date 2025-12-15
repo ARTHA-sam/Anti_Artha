@@ -1,0 +1,27 @@
+{
+    "port": 8080,
+    "database": {
+        "driver": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "name": "artha_social",
+        "username": "root",
+        "password": "Sam@2006"
+    },
+    "app": {
+        "name": "ARTHA Social Network",
+        "version": "1.0.0",
+        "maxPostLength": 500
+    },
+    "jwt": {
+        "secret": "artha-social-secret-key-change-in-production-2024",
+        "expiryHours": 24
+    },
+    "dependencies": {
+        "mysql": "8.2.0",
+        "com.zaxxer:HikariCP": "5.1.0",
+        "gson": "2.10.1",
+        "jackson-core": "2.16.1",
+        "jackson-annotations": "2.16.1"
+    }
+}
