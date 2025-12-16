@@ -129,6 +129,40 @@ public class QueryBuilder {
     }
 
     /**
+     * Find a single record by ID
+     */
+    public <T> T find(Object id, Class<T> clazz) throws SQLException {
+        return where("id", id).first(clazz);
+    }
+
+    /**
+     * Save an object (Insert or Update)
+     * Assumes "id" field determines if it's new or existing.
+     */
+    public int save(Object entity) throws SQLException {
+        ObjectMapper mapper = new ObjectMapper();
+        // Convert object to map
+        Map<String, Object> map = mapper.convertValue(entity,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+                });
+
+        Object id = map.get("id");
+
+        // Remove nulls if necessary? Usually insert/update handles them.
+
+        if (id != null && (id instanceof Number && ((Number) id).longValue() > 0)) {
+            return where("id", id).update(map);
+        } else {
+            // Remove null/empty id to let DB auto-increment
+            if (map.containsKey("id") && (map.get("id") == null
+                    || (map.get("id") instanceof Number && ((Number) map.get("id")).longValue() == 0))) {
+                map.remove("id");
+            }
+            return insert(map);
+        }
+    }
+
+    /**
      * Execute SELECT and return list of maps
      */
     public List<Map<String, Object>> get() throws SQLException {

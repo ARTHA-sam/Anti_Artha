@@ -1,20 +1,26 @@
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 // Simple User class
 public class User {
-    private int id;
+    private Integer id;
     private String username;
     private String email;
     private String password;
+
+    @JsonProperty("full_name")
+    @JsonAlias("fullName")
     private String fullName;
     private String bio;
 
     public User() {
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

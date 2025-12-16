@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - ARTHA Framework</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Documentation Layout */
+        .docs-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .docs-sidebar {
+            position: sticky;
+            top: 100px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding-right: 1.5rem;
+            border-right: 1px solid var(--border-glass);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            padding-left: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            color: white;
+            border-left-color: #ec4899;
+            /* Pink from gradient */
+        }
+
+        /* Main Content */
+        .docs-content {
+            max-width: 900px;
+        }
+
+        .doc-section {
+            margin-bottom: 5rem;
+            scroll-margin-top: 120px;
+        }
+
+        .doc-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .doc-subtitle {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 2.5rem 0 1rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: rgba(15, 15, 25, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        pre {
+            color: #e0e0ff;
+        }
+
+        /* Tables for Config */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--bg-glass);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .config-table th,
+        .config-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .config-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        /* Steps for DB Setup */
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .docs-container {
+                grid-template-columns: 1fr;
+            }
+
+            .docs-sidebar {
+                display: none;
+                /* Hide sidebar on mobile for now */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background -->
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo-container">
+                    <a href="index.html"
+                        style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+                            <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="url(#gradient1)" />
+                            <defs>
+                                <linearGradient id="gradient1" x1="0" y1="0" x2="40" y2="40">
+                                    <stop offset="0%" stop-color="#8B5CF6" />
+                                    <stop offset="100%" stop-color="#EC4899" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span class="logo-text">ARTHA</span>
+                    </a>
+                </div>
+                <div class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="guide.html" class="nav-link" style="color: white;">Docs</a>
+                    <a href="https://github.com/ARTHA-sam/Anti_Artha" class="nav-link-special">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-container">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Getting Started</div>
+                <a href="#intro" class="sidebar-link active">Introduction</a>
+                <a href="#configuration" class="sidebar-link">Configuration file</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Database Setup</div>
+                <a href="#db-mysql" class="sidebar-link">MySQL & Workbench</a>
+                <a href="#db-sqlite" class="sidebar-link">SQLite</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Core Features</div>
+                <a href="#orm" class="sidebar-link">Simple ORM</a>
+                <a href="#routing" class="sidebar-link">Routing & Controllers</a>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="docs-content">
+
+            <!-- Introduction -->
+            <section id="intro" class="doc-section">
+                <h1 class="doc-title">Welcome to ARTHA</h1>
+                <p>ARTHA is a lightweight, student-first Java framework designed to make backend development as easy as
+                    solving a LeetCode problem. No XML, no complex annotations, just pure logic.</p>
+                <div class="alert">
+                    <div class="alert-icon">💡</div>
+                    <div>
+                        <strong>Why ARTHA?</strong> It removes the boilerplate usually found in Spring Boot, allowing
+                        you to focus strictly on Data Structures and Algorithms logic within your endpoints.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration -->
+            <section id="configuration" class="doc-section">
+                <h2 class="doc-title">Configuration</h2>
+                <p>The heart of your application is the <code>artha.json</code> file. This single file manages your
+                    server settings, database connection, and dependencies.</p>
+
+                <div class="code-block">
+                    <pre>{
+    "port": 8080,
+    "database": {
+        "driver": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "name": "artha_social",
+        "username": "root",
+        "password": "your_password"
+    },
+    "dependencies": {
+        "hikari": "5.1.0",
+        "jackson": "2.16.1"
+    }
+}</pre>
+                </div>
+
+                <h3 class="doc-subtitle">Key Settings</h3>
+                <table class="config-table">
+                    <tr>
+                        <th>Key</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><code>port</code></td>
+                        <td>Server port number</td>
+                        <td>8080</td>
+                    </tr>
+                    <tr>
+                        <td><code>database.driver</code></td>
+                        <td>Database type (mysql, postgres, sqlite)</td>
+                        <td>"mysql"</td>
+                    </tr>
+                    <tr>
+                        <td><code>dependencies</code></td>
+                        <td>Libraries to download automatically</td>
+                        <td>{"hikari": "5.1.0"}</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Database Setup -->
+            <section id="db-setup" class="doc-section">
+                <h2 class="doc-title">Database Setup Guide</h2>
+                <p>ARTHA supports multiple databases out of the box. Choose your flavor below.</p>
+
+                <div class="alert">
+                    <div class="alert-icon">📘</div>
+                    <div>
+                        <strong>Sample Files:</strong> Copy these configurations directly into your
+                        <code>artha.json</code>.
+                    </div>
+                </div>
+
+                <!-- MySQL -->
+                <h3 id="db-mysql" class="doc-subtitle">Option 1: MySQL (Production Ready)</h3>
+                <p>Best for standard web applications. Requires MySQL Server installed.</p>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h4>Configuration (artha.json)</h4>
+                        <div class="code-block">
+                            <pre>"database": {
+    "driver": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "name": "artha_social",
+    "username": "root",
+    "password": "YOUR_PASSWORD"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h4>Workbench Setup (schema.sql)</h4>
+                        <p>Open MySQL Workbench -> File -> New Query Tab. Paste and Run (Lightning Bolt icon):</p>
+                        <div class="code-block">
+                            <pre>CREATE DATABASE IF NOT EXISTS artha_social;
+USE artha_social;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(255),
+    full_name VARCHAR(255)
+);</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PostgreSQL -->
+                <h3 id="db-postgres" class="doc-subtitle">Option 2: PostgreSQL (Advanced)</h3>
+                <p>Great for advanced data types and reliability.</p>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h4>Configuration (artha.json)</h4>
+                        <div class="code-block">
+                            <pre>"database": {
+    "driver": "postgresql",
+    "host": "localhost",
+    "port": 5432,
+    "name": "artha_db",
+    "username": "postgres",
+    "password": "YOUR_PASSWORD"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h4>Dependencies</h4>
+                        <p>Don't forget to add the driver in <code>artha.json</code> dependencies:</p>
+                        <div class="code-block">
+                            <pre>"dependencies": {
+    "postgresql": "42.7.2", 
+    "hikari": "5.1.0"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQLite -->
+                <h3 id="db-sqlite" class="doc-subtitle">Option 3: SQLite (Easiest / Local)</h3>
+                <p>Zero installation. The database is just a file in your project folder.</p>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <h4>Configuration (artha.json)</h4>
+                        <div class="code-block">
+                            <pre>"database": {
+    "driver": "sqlite",
+    "name": "data/app.db"   <span class="code-comment">// File path relative to project</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <h4>Initialization</h4>
+                        <p>You can run this Java code once to create tables (since there is no "Workbench" for SQLite by
+                            default):</p>
+                        <div class="code-block">
+                            <pre>Database.getInstance().execute(
+    "CREATE TABLE IF NOT EXISTS users (" +
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "username TEXT NOT NULL" +
+    ")"
+);</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ORM -->
+            <section id="orm" class="doc-section">
+                <h2 class="doc-title">Simple ORM <span class="feature-badge"
+                        style="vertical-align: middle; margin-left:10px; font-size:1rem;">NEW</span></h2>
+                <p>Stop writing raw SQL for everything! ARTHA's Simple ORM lets you treat database rows as Java Objects.
+                </p>
+
+                <h3 class="doc-subtitle">1. Define your Model</h3>
+                <p>Use annotations to map JSON fields (CamelCase) to DB columns (SnakeCase).</p>
+                <div class="code-block">
+                    <pre>public class User {
+    private Integer id;
+
+    @JsonProperty("full_name")  // Maps to DB column
+    @JsonAlias("fullName")      // Maps from JSON input
+    private String fullName;
+}</pre>
+                </div>
+
+                <h3 class="doc-subtitle">2. Use in Controller</h3>
+                <p>Magic happens here. Clean, readable code.</p>
+                <div class="code-block">
+                    <pre>// 1. Auto-parse Request Body
+User user = req.body(User.class);
+
+// 2. Save directly to Database (Insert or Update)
+db.table("users").save(user);
+
+// 3. Update Response
+return Map.of("status", "success", "id", user.getId());</pre>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-icon">⚡</div>
+                    <div>
+                        <strong>Pro Tip:</strong> <code>.save()</code> checks the ID. If ID is null/0, it INSERTS. If ID
+                        > 0, it UPDATES.
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Active Link Script -->
+    <script>
+        const links = document.querySelectorAll('.sidebar-link');
+        const sections = document.querySelectorAll('.doc-section');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current) && current !== '') {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
