@@ -1,6 +1,6 @@
 {
-    "username": "testuser3",
-    "email": "test3@example.com",
-    "password": "test123",
-    "fullName": "Test User 3"
+    "username": "testuser_fixed",
+    "email": "fixed@example.com",
+    "password": "securepassword",
+    "fullName": "Fixed User"
 }

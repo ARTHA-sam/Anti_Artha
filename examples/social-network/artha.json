@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "mysql": "8.2.0",
-        "com.zaxxer:HikariCP": "5.1.0",
+        "hikari": "5.1.0",
         "gson": "2.10.1",
         "jackson-core": "2.16.1",
         "jackson-annotations": "2.16.1"
