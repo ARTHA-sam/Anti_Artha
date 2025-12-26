@@ -40,6 +40,15 @@ public class AuthController {
         }
     }
 
+    // New Secure Endpoint using Middleware
+    @Step(path = "/me", method = "GET")
+    @Before(AuthMiddleware.class)
+    public Object me(Request req) {
+        // Code here runs ONLY if AuthMiddleware passes!
+        // No manual if checks needed.
+        return Map.of("message", "You are authenticated!", "user", "UserORM");
+    }
+
     @Step(path = "/login", method = "POST")
     public Object login(Request req, Response res) {
         try {

@@ -3,7 +3,7 @@ build/
 target/
 .gradle/
 .idea/
-.vscode/
+
 *.class
 *.log
 

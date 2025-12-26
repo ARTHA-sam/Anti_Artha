@@ -244,6 +244,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Core Features</div>
                 <a href="#orm" class="sidebar-link">Simple ORM</a>
+                <a href="#middleware" class="sidebar-link">Middleware</a>
                 <a href="#routing" class="sidebar-link">Routing & Controllers</a>
             </div>
         </aside>
@@ -476,6 +477,38 @@ return Map.of("status", "success", "id", user.getId());</pre>
                         <strong>Pro Tip:</strong> <code>.save()</code> checks the ID. If ID is null/0, it INSERTS. If ID
                         > 0, it UPDATES.
                     </div>
+                </div>
+            </section>
+
+            <!-- Middleware -->
+            <section id="middleware" class="doc-section">
+                <h2 class="doc-title">Middleware (Security)</h2>
+                <p>Don't repeat <code>if (token == null)</code> in every controller. use Middleware to Intercept
+                    requests.</p>
+
+                <h3 class="doc-subtitle">1. Create Middleware</h3>
+                <div class="code-block">
+                    <pre>public class AuthMiddleware implements Middleware {
+    @Override
+    public void apply(Request req, Response res) throws Exception {
+        String token = req.header("Authorization");
+        if (token == null || !isValid(token)) {
+             res.status(401);
+             throw new RuntimeException("Unauthorized");
+        }
+    }
+}</pre>
+                </div>
+
+                <h3 class="doc-subtitle">2. Attach to Routes</h3>
+                <p>Use <code>@Before</code> to protect specific endpoints.</p>
+                <div class="code-block">
+                    <pre>@Step(path = "/me")
+@Before(AuthMiddleware.class) // &lt;-- This runs BEFORE the method
+public Object getProfile(Request req) {
+    // This code ONLY runs if Middleware passes!
+    return user;
+}</pre>
                 </div>
             </section>
 
