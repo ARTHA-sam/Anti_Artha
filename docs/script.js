@@ -12,6 +12,36 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// Mobile Menu Toggle
+const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+const navMenu = document.querySelector('.nav-menu');
+const mobileOverlay = document.querySelector('.mobile-overlay');
+const navLinks = document.querySelectorAll('.nav-link, .nav-link-special');
+
+function toggleMobileMenu() {
+    mobileMenuToggle.classList.toggle('active');
+    navMenu.classList.toggle('active');
+    mobileOverlay.classList.toggle('active');
+    document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+}
+
+if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+}
+
+if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', toggleMobileMenu);
+}
+
+// Close mobile menu when clicking nav links
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        if (navMenu.classList.contains('active')) {
+            toggleMobileMenu();
+        }
+    });
+});
+
 // Example tabs
 const showcaseTabs = document.querySelectorAll('.showcase-tab');
 const exampleCards = document.querySelectorAll('.example-card');
