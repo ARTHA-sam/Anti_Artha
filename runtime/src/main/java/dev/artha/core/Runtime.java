@@ -145,6 +145,15 @@ public class Runtime {
             registerMethodRoute(app, method);
         }
 
+        // ARTHA v2.0: Scan for @RestController annotations
+        Set<Class<?>> restControllers = reflections.getTypesAnnotatedWith(dev.artha.annotations.RestController.class);
+        if (!restControllers.isEmpty()) {
+            System.out.println("\n📦 Registering REST controllers...\n");
+            for (Class<?> clazz : restControllers) {
+                registerRestController(app, clazz);
+            }
+        }
+
         // Scan and register @ExceptionHandler methods
         Set<Method> exceptionHandlerMethods = reflections
                 .getMethodsAnnotatedWith(dev.artha.annotations.ExceptionHandler.class);
@@ -290,6 +299,122 @@ public class Runtime {
         }
     }
 
+    // ARTHA v2.0: Register REST controller with convention-based routing
+    private static void registerRestController(Javalin app, Class<?> clazz) {
+        try {
+            dev.artha.annotations.RestController annotation = clazz
+                    .getAnnotation(dev.artha.annotations.RestController.class);
+            String basePath = annotation.value();
+
+            // Get controller instance from DI
+            Object instance = DIContainer.getInstance().get(clazz);
+
+            // Scan all public methods
+            for (Method method : clazz.getDeclaredMethods()) {
+                // Skip if has @Step (explicit routing takes precedence)
+                if (method.isAnnotationPresent(Step.class)) {
+                    registerMethodRoute(app, method);
+                    continue;
+                }
+
+                // Skip non-public methods
+                if (!java.lang.reflect.Modifier.isPublic(method.getModifiers())) {
+                    continue;
+                }
+
+                // Detect route from method name
+                RouteInfo route = detectRoute(method, basePath);
+                if (route != null) {
+                    System.out.println(
+                            "  " + route.httpMethod + "  " + route.path + " → " +
+                                    clazz.getSimpleName() + "." + method.getName() + "()   [REST]");
+                    registerHandler(app, route.httpMethod, route.path,
+                            ctx -> handleRequest(ctx, clazz, method));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Failed to register REST controller: " + clazz.getName());
+            e.printStackTrace();
+        }
+    }
+
+    // Helper: Detect HTTP method and path from method name
+    private static RouteInfo detectRoute(Method method, String basePath) {
+        String name = method.getName();
+        java.lang.reflect.Parameter[] params = method.getParameters();
+
+        // GET /resource/{id}
+        if (name.equals("getById") || name.equals("get")) {
+            // Check if method has an id parameter
+            boolean hasIdParam = params.length > 0 &&
+                    (params[0].getType() == int.class || params[0].getType() == long.class ||
+                            params[0].getType() == String.class);
+            if (hasIdParam) {
+                String paramName = params[0].getName();
+                return new RouteInfo("GET", basePath + "/{" + paramName + "}");
+            }
+        }
+        // GET /resource
+        else if (name.equals("list") || name.equals("getAll") || name.equals("findAll")) {
+            return new RouteInfo("GET", basePath);
+        }
+        // POST /resource
+        else if (name.equals("create") || name.equals("add")) {
+            return new RouteInfo("POST", basePath);
+        }
+        // PUT /resource/{id}
+        else if (name.equals("update") || name.equals("edit")) {
+            // First param should be ID
+            if (params.length > 0) {
+                String paramName = params[0].getName();
+                return new RouteInfo("PUT", basePath + "/{" + paramName + "}");
+            }
+        }
+        // DELETE /resource/{id}
+        else if (name.equals("delete") || name.equals("remove")) {
+            if (params.length > 0) {
+                String paramName = params[0].getName();
+                return new RouteInfo("DELETE", basePath + "/{" + paramName + "}");
+            }
+        }
+        // PATCH /resource/{id}
+        else if (name.equals("patch")) {
+            if (params.length > 0) {
+                String paramName = params[0].getName();
+                return new RouteInfo("PATCH", basePath + "/{" + paramName + "}");
+            }
+        }
+        // Custom GET methods (starts with "get" or "find")
+        else if (name.startsWith("get") && !name.equals("get")) {
+            // e.g., getByEmail, getActive -> GET /resource/by-email, GET /resource/active
+            String pathSuffix = name.substring(3); // Remove "get"
+            pathSuffix = camelToKebab(pathSuffix);
+            return new RouteInfo("GET", basePath + "/" + pathSuffix);
+        } else if (name.startsWith("find") && !name.equals("findAll")) {
+            String pathSuffix = name.substring(4); // Remove "find"
+            pathSuffix = camelToKebab(pathSuffix);
+            return new RouteInfo("GET", basePath + "/" + pathSuffix);
+        }
+
+        return null; // No convention matched
+    }
+
+    // Helper: Convert camelCase to kebab-case
+    private static String camelToKebab(String camel) {
+        return camel.replaceAll("([a-z])([A-Z])", "$1-$2").toLowerCase();
+    }
+
+    // Helper class to hold route information
+    private static class RouteInfo {
+        String httpMethod;
+        String path;
+
+        RouteInfo(String httpMethod, String path) {
+            this.httpMethod = httpMethod;
+            this.path = path;
+        }
+    }
+
     private static void handleRequest(io.javalin.http.Context ctx, Class<?> clazz, Method method) {
         try {
             // Use DI container for instance creation (supports @Inject)
@@ -340,7 +465,7 @@ public class Runtime {
         // Track injected connection for auto-closing
         Connection injectedConnection = null;
 
-        // Smart Parameter Injection
+        // ARTHA v2.0: Enhanced Parameter Resolution
         java.lang.reflect.Parameter[] params = method.getParameters();
         Object[] args = new Object[params.length];
 
@@ -348,7 +473,20 @@ public class Runtime {
             java.lang.reflect.Parameter param = params[i];
             Class<?> type = param.getType();
 
-            if (type == Request.class) {
+            // 1. Check for @Body annotation (explicit body parsing)
+            if (param.isAnnotationPresent(dev.artha.annotations.Body.class)) {
+                args[i] = parseBodyParam(ctx, param, type);
+            }
+            // 2. Check for @Query annotation (query parameters)
+            else if (param.isAnnotationPresent(dev.artha.annotations.Query.class)) {
+                args[i] = parseQueryParam(ctx, param);
+            }
+            // 3. Check for @PathParam annotation (explicit path param)
+            else if (param.isAnnotationPresent(dev.artha.annotations.PathParam.class)) {
+                args[i] = parsePathParamExplicit(ctx, param);
+            }
+            // 4. Legacy: Request/Response injection
+            else if (type == Request.class) {
                 args[i] = req;
             } else if (type == Response.class) {
                 args[i] = res;
@@ -360,16 +498,35 @@ public class Runtime {
                 } else {
                     throw new IllegalStateException("Database not configured! Add database section to artha.json");
                 }
-            } else {
-                // Advanced Injection: Parse POJO from request body
+            }
+            // 5. Auto path param extraction (v2.0 new feature!)
+            else if (isPrimitiveOrWrapper(type) || type == String.class) {
+                // Try to extract from path parameter by parameter name
+                String paramName = param.getName();
+                String pathValue = ctx.pathParam(paramName);
+
+                if (pathValue != null) {
+                    args[i] = convertType(pathValue, type);
+                } else {
+                    // If not in path, try query param as fallback
+                    String queryValue = ctx.queryParam(paramName);
+                    if (queryValue != null) {
+                        args[i] = convertType(queryValue, type);
+                    } else {
+                        args[i] = getDefaultValue(type);
+                    }
+                }
+            }
+            // 6. Complex type without @Body? Try to parse from body (backward
+            // compatibility)
+            else {
                 try {
                     String body = ctx.body();
                     if (body != null && !body.trim().isEmpty()) {
-                        // Use Jackson to deserialize JSON to POJO
                         ObjectMapper mapper = new ObjectMapper();
                         Object pojo = mapper.readValue(body, type);
 
-                        // Validate if @Valid annotation is present on the method parameter
+                        // Validate if @Valid annotation is present
                         if (param.isAnnotationPresent(Valid.class)) {
                             @SuppressWarnings("unchecked")
                             Set<ConstraintViolation<Object>> violations = validator.validate(pojo);
@@ -382,17 +539,22 @@ public class Runtime {
                         args[i] = null;
                     }
                 } catch (RequestValidationException e) {
-                    throw e; // Re-throw validation exceptions to be caught by handleError
+                    throw e;
                 } catch (Exception e) {
-                    // If parsing fails, throw a 400 Bad Request
                     throw new IllegalArgumentException("Invalid request body: " + e.getMessage());
                 }
             }
         }
 
         try {
-            method.setAccessible(true); // Allow calling package-private methods
+            method.setAccessible(true);
             Object result = method.invoke(instance, args);
+
+            // Check for @Status annotation (v2.0)
+            if (method.isAnnotationPresent(dev.artha.annotations.Status.class)) {
+                int status = method.getAnnotation(dev.artha.annotations.Status.class).value();
+                ctx.status(status);
+            }
 
             // Auto-serialize if not already handled
             if (result != null) {
@@ -412,6 +574,122 @@ public class Runtime {
                 }
             }
         }
+    }
+
+    // Helper: Parse @Body parameter
+    private static Object parseBodyParam(io.javalin.http.Context ctx, java.lang.reflect.Parameter param, Class<?> type)
+            throws Exception {
+        String body = ctx.body();
+        if (body == null || body.trim().isEmpty()) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        Object pojo = mapper.readValue(body, type);
+
+        // Validate if @Valid is present
+        if (param.isAnnotationPresent(Valid.class)) {
+            @SuppressWarnings("unchecked")
+            Set<ConstraintViolation<Object>> violations = validator.validate(pojo);
+            if (!violations.isEmpty()) {
+                throw new RequestValidationException(violations);
+            }
+        }
+
+        return pojo;
+    }
+
+    // Helper: Parse @Query parameter
+    private static Object parseQueryParam(io.javalin.http.Context ctx, java.lang.reflect.Parameter param) {
+        dev.artha.annotations.Query annotation = param.getAnnotation(dev.artha.annotations.Query.class);
+        String queryName = annotation.value().isEmpty() ? param.getName() : annotation.value();
+        String value = ctx.queryParam(queryName);
+
+        // Use default if not provided
+        if (value == null || value.isEmpty()) {
+            value = annotation.defaultValue();
+            if (value.isEmpty()) {
+                return getDefaultValue(param.getType());
+            }
+        }
+
+        return convertType(value, param.getType());
+    }
+
+    // Helper: Parse @PathParam parameter
+    private static Object parsePathParamExplicit(io.javalin.http.Context ctx, java.lang.reflect.Parameter param) {
+        dev.artha.annotations.PathParam annotation = param.getAnnotation(dev.artha.annotations.PathParam.class);
+        String pathName = annotation.value().isEmpty() ? param.getName() : annotation.value();
+        String value = ctx.pathParam(pathName);
+
+        if (value == null) {
+            throw new IllegalArgumentException("Path parameter '" + pathName + "' is required");
+        }
+
+        return convertType(value, param.getType());
+    }
+
+    // Helper: Check if type is primitive or wrapper
+    private static boolean isPrimitiveOrWrapper(Class<?> type) {
+        return type.isPrimitive() ||
+                type == Integer.class || type == Long.class ||
+                type == Double.class || type == Float.class ||
+                type == Boolean.class || type == Short.class ||
+                type == Byte.class || type == Character.class;
+    }
+
+    // Helper: Convert string to target type
+    private static Object convertType(String value, Class<?> type) {
+        if (value == null) {
+            return getDefaultValue(type);
+        }
+
+        try {
+            if (type == String.class) {
+                return value;
+            } else if (type == int.class || type == Integer.class) {
+                return Integer.parseInt(value);
+            } else if (type == long.class || type == Long.class) {
+                return Long.parseLong(value);
+            } else if (type == double.class || type == Double.class) {
+                return Double.parseDouble(value);
+            } else if (type == float.class || type == Float.class) {
+                return Float.parseFloat(value);
+            } else if (type == boolean.class || type == Boolean.class) {
+                return Boolean.parseBoolean(value);
+            } else if (type == short.class || type == Short.class) {
+                return Short.parseShort(value);
+            } else if (type == byte.class || type == Byte.class) {
+                return Byte.parseByte(value);
+            } else if (type == char.class || type == Character.class) {
+                return value.charAt(0);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Cannot convert '" + value + "' to " + type.getSimpleName());
+        }
+
+        throw new IllegalArgumentException("Unsupported parameter type: " + type.getName());
+    }
+
+    // Helper: Get default value for primitives
+    private static Object getDefaultValue(Class<?> type) {
+        if (type == int.class)
+            return 0;
+        if (type == long.class)
+            return 0L;
+        if (type == double.class)
+            return 0.0;
+        if (type == float.class)
+            return 0.0f;
+        if (type == boolean.class)
+            return false;
+        if (type == short.class)
+            return (short) 0;
+        if (type == byte.class)
+            return (byte) 0;
+        if (type == char.class)
+            return '\0';
+        return null;
     }
 
     private static void handleError(io.javalin.http.Context ctx, Exception e) {
